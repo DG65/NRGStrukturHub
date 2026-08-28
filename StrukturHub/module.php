@@ -777,10 +777,12 @@ class StrukturHub extends IPSModule
         if (preg_match('/^\d+$/', $label)) {
             return $label;
         }
-        if (preg_match('/^(.*\S)[\s.\-]*(\d+)$/u', $label, $m)) {
-            return $m[2];
+        // Nachgestellte Nummer zuerst prüfen (Standard-Konvention "Name 101").
+        if (preg_match('/(\d+)$/', $label, $m)) {
+            return $m[1];
         }
-        if (preg_match('/^(\d+)[\s.\-]*(\S.*)$/u', $label, $m)) {
+        // Vorangestellte Nummer ("101 Name").
+        if (preg_match('/^(\d+)/', $label, $m)) {
             return $m[1];
         }
         return null;
