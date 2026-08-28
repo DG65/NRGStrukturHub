@@ -15,6 +15,14 @@ Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
   (`GenLevelNumberPos`/`GenRoomNumberPos`) — z. B. "101 Büro" statt "Büro 101".
 
 ### Fixed
+- `buildStructure()`: Räume, die der v0.2-Generator bewusst OHNE Etagen-Zuordnung anlegt,
+  während in derselben Struktur auch Etagen existieren (gemischte Struktur), wurden bisher
+  komplett übersehen — der "Etagen existieren"-Zweig durchsuchte nur die Kinder je Etage,
+  nicht die sonstigen Kinder der Wurzelkategorie. Jetzt werden generator-eigene Räume (erkennbar
+  am Ident-Präfix) zusätzlich erfasst, ohne die Gewerke-Ausschluss-Logik für organisch
+  gewachsene, nicht geflaggte Kategorien zu verändern.
+- Generator-Methoden-Parameter (`rows`/`levelRows`/`roomRows`) explizit als `string` typisiert
+  (IPS-Kernel unterstützt nur bool/int/float/string für PREFIX_-Funktionsparameter).
 - `order` lieferte seit Einführung immer `0` (`IPS_GetObject()['Position']` statt
   `'ObjectPosition'` gelesen) — live beim v0.2-Testlauf gefunden.
 

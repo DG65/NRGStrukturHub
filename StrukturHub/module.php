@@ -98,6 +98,11 @@ class StrukturHub extends IPSModule
      *
      * - "levels" ist leer, wenn keine Etagen-Ebene bestätigt wurde — "rooms[].level"
      *   ist dann ebenfalls "" (Räume liegen direkt unter der Wurzelkategorie).
+     *   Existieren Etagen, kann "rooms[].level" TROTZDEM "" sein für Räume, die
+     *   der v0.2-Gerüst-Generator bewusst ohne Etagen-Zuordnung direkt unter
+     *   der Wurzel angelegt hat (gemischte Struktur) — erkennbar am
+     *   generator-eigenen Ident-Präfix, nicht jede unflagged Kategorie wird
+     *   automatisch zum Raum (sonst kämen Gewerke-Kategorien wieder rein).
      * - "key" (levels UND rooms) ist GARANTIERT: nur Zeichen aus [a-z0-9_]
      *   (Umlaute transliteriert), eindeutig über levels UND rooms HINWEG (ein
      *   gemeinsamer Namensraum, nicht zwei getrennte), und STABIL über eine
@@ -669,6 +674,25 @@ class StrukturHub extends IPSModule
                         continue;
                     }
                     $rooms[] = $this->buildRoom($rcid, $key, $registry);
+                }
+            }
+
+            // Räume, die der v0.2-Gerüst-Generator BEWUSST ohne Etagen-
+            // Zuordnung direkt unter der Wurzel angelegt hat (auch wenn
+            // andere Räume derselben Struktur Etagen haben) — Live-Fund
+            // 29.08.2026: wurden bislang komplett übersehen, weil dieser
+            // Zweig nur die Kinder JE Etage durchsucht. Erkennbar am
+            // strukt_-Ident-Präfix des Generators, NICHT einfach jede
+            // unflagged Kategorie — sonst kämen hier wieder Gewerke-
+            // Kategorien (Energie/Heizung/Test) als Räume rein, genau das
+            // Problem, das die Etagen-Häkchen lösen sollen.
+            $levelCatIDSet = array_flip($levelCatIDs);
+            foreach (IPS_GetChildrenIDs($root) as $cid) {
+                if (isset($levelCatIDSet[$cid]) || !$this->isCategory($cid)) {
+                    continue;
+                }
+                if (strpos(IPS_GetObject($cid)['ObjectIdent'], 'strukt_') === 0) {
+                    $rooms[] = $this->buildRoom($cid, '', $registry);
                 }
             }
         }
