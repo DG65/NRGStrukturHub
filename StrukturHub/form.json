@@ -1,0 +1,131 @@
+{
+  "elements": [
+    {
+      "type": "ExpansionPanel",
+      "name": "NewsPanel",
+      "caption": "🆕 Neu in Version 0.1.0",
+      "expanded": true,
+      "visible": true,
+      "items": [
+        {
+          "type": "Label",
+          "caption": "Erste Version: liest die bestehende Objektbaum-Struktur (Etagen/Räume/Geräte-Instanzen) ein und stellt sie anderen NRG-Stack-Modulen als Vertrag (STRUKT_GetStructure) bereit. Legt nichts an, ändert nichts — reine Auskunft."
+        },
+        {
+          "type": "Button",
+          "caption": "Verstanden – nicht mehr anzeigen",
+          "onClick": "STRUKT_AckNews($id);"
+        }
+      ]
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "📖 Dokumentation & Hilfe",
+      "expanded": false,
+      "items": [
+        {
+          "type": "Label",
+          "caption": "StrukturHub macht die bestehende Objektbaum-Struktur einer Symcon-Installation maschinenlesbar. Unten die Wurzelkategorie deiner Räume auswählen (z. B. eine Kategorie „Räume“ oder „Zuhause“) — Beispiel, keine Vorgabe."
+        },
+        {
+          "type": "Label",
+          "caption": "Danach erscheinen die direkten Unterkategorien in der Tabelle „Etagen“. Häkchen bei allen setzen, die wirklich eine Etage sind — andere Kategorien auf derselben Ebene (z. B. „Energie“, „Test“) einfach ungehäkelt lassen, sie werden dann ignoriert. Ohne Häkchen gelten die direkten Unterkategorien der Wurzel selbst als Räume (kein Etagen-Layer nötig)."
+        },
+        {
+          "type": "Label",
+          "caption": "Als Geräte eines Raums zählen sowohl direkt darin liegende Geräte-Instanzen als auch Verknüpfungen (Links) auf Instanzen an anderer Stelle. Doppelte Verknüpfungen auf dasselbe Gerät und tote/namenlose Links (Ziel existiert nicht mehr) werden automatisch bereinigt."
+        },
+        {
+          "type": "Label",
+          "caption": "Vertrag für andere Module: STRUKT_GetStructure($id) liefert einen JSON-STRING (kein PHP-Array!) mit contractVersion/levels/rooms. Immer hinter function_exists('STRUKT_GetStructure') aufrufen."
+        }
+      ]
+    },
+    {
+      "type": "SelectCategory",
+      "name": "RootCategoryID",
+      "caption": "Wurzelkategorie der Räume"
+    },
+    {
+      "type": "List",
+      "name": "Levels",
+      "caption": "Etagen (Häkchen bei allen Etagen-Kategorien setzen)",
+      "rowCount": 8,
+      "add": false,
+      "delete": false,
+      "loadValuesFromConfiguration": false,
+      "columns": [
+        {
+          "caption": "Etage?",
+          "name": "IsLevel",
+          "width": "80px",
+          "add": false,
+          "edit": { "type": "CheckBox" }
+        },
+        {
+          "caption": "Kategorie",
+          "name": "Name",
+          "width": "260px",
+          "add": ""
+        },
+        {
+          "caption": "Kinder",
+          "name": "Kinder",
+          "width": "90px",
+          "add": 0
+        },
+        {
+          "caption": "Kategorie-ID",
+          "name": "CategoryID",
+          "width": "110px",
+          "add": 0
+        }
+      ]
+    },
+    {
+      "type": "Button",
+      "caption": "🔎 Struktur jetzt einlesen",
+      "onClick": "echo STRUKT_RefreshStructure($id);"
+    },
+    {
+      "type": "Label",
+      "name": "StatusLine",
+      "caption": "ℹ️ Noch nicht eingelesen."
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "🔍 Eingelesene Struktur (zur Kontrolle)",
+      "expanded": false,
+      "items": [
+        {
+          "type": "List",
+          "name": "StructurePreview",
+          "caption": "Räume",
+          "rowCount": 10,
+          "add": false,
+          "delete": false,
+          "loadValuesFromConfiguration": false,
+          "columns": [
+            { "caption": "Raum", "name": "Raum", "width": "220px", "add": "" },
+            { "caption": "Etage", "name": "Etage", "width": "160px", "add": "" },
+            { "caption": "Geräte", "name": "Geraete", "width": "90px", "add": 0 }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "RowLayout",
+      "name": "ForumHint",
+      "visible": true,
+      "items": [
+        { "type": "Label", "caption": "🧪 StrukturHub ist neu — Rückmeldungen sind im Symcon-Forum willkommen:" },
+        { "type": "Label", "link": true, "caption": "https://github.com/DG65/NRGStrukturHub" },
+        { "type": "Button", "caption": "Nicht mehr anzeigen", "onClick": "STRUKT_DismissForumHint($id);" }
+      ]
+    }
+  ],
+  "status": [
+    { "code": 102, "icon": "active", "caption": "Aktiv" },
+    { "code": 104, "icon": "inactive", "caption": "Wurzelkategorie noch nicht ausgewählt" }
+  ]
+}
