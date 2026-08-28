@@ -21,7 +21,10 @@ Heuristiken zu bauen.
   Etagen sind). StrukturHub liefert das als Vertrag. Legt nichts an, baut nichts um —
   gefahrlos installierbar.
 - **v0.2 (geplant) — Gerüst-Generator.** Legt für Einsteiger Kategorien + Links nach der
-  Verbund-Konvention an. Baut auf dem in v0.1 etablierten Vertrag auf.
+  Verbund-Konvention an. Baut auf dem in v0.1 etablierten Vertrag auf. Muss von Anfang an
+  sowohl privaten als auch **gewerblichen** Gebrauch abdecken (ganze Bürogebäude/Etagen/Räume
+  inkl. Raumnummern in Masse anlegen, alle Begriffe konfigurierbar) — Details siehe
+  [CLAUDE.md](CLAUDE.md#roadmap).
 
 ## Vertrag `STRUKT_GetStructure($id): string`
 

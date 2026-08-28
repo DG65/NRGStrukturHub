@@ -65,3 +65,20 @@ nachlesen, nicht Code zwischen Modulen vergleichen.
 - **v0.2 (geplant):** Gerüst-Generator für Einsteiger — Kategorien + Links nach Konvention
   anlegen. Profitiert vom in v0.1 etablierten Vertrag (das Erzeugte ist per Definition
   vertragskonform).
+
+  **Anforderung Dietmar (28.08.2026), explizit VOR Baubeginn festgehalten:** Der Generator
+  darf NICHT nur den privaten Wohnhaus-Fall abdecken (Grundregel "keine eigene Anlage als
+  Norm", siehe SUITE.md) — er muss auch den **gewerblichen Bereich** bedienen können: ganze
+  Bürogebäude/Etagen/Räume **in Masse** anlegen, inkl. Raumnummern (z. B. "Büro 204", nicht
+  nur freie Namen wie "Küche"). Alle Begriffe/Strukturannahmen müssen **konfigurierbar bzw.
+  abfragbar** sein, nicht hartkodiert — das betrifft mindestens:
+  - Terminologie (Etage/Stockwerk/Geschoss, Raum/Büro/Zimmer) statt fester Wohnhaus-Begriffe.
+  - Masseneingabe/Bulk-Anlage (z. B. Nummernbereich "101–150" statt Raum für Raum einzeln),
+    nicht nur ein Formular pro Raum.
+  - Raumnummer als eigenes, vom freien Label unterscheidbares Konzept, falls Nutzer nach
+    Nummer statt Name gruppieren/sortieren wollen (v0.1 deckt das bereits ab, sofern die
+    Nummer Teil des Kategorienamens ist — `rooms[].label` ist bewusst freier Text; erst bei
+    echtem Bedarf ein eigenes strukturiertes Feld einführen, kein Vorgriff ohne Anwendungsfall).
+  - `inferRoomType()` (siehe module.php) deckt seit 28.08.2026 bereits sowohl privates als
+    auch gewerbliches Vokabular ab (Büro/Besprechungsraum/Lager/Empfang/…) — bei v0.2 als
+    Ausgangspunkt für Raumtyp-Vorlagen im Generator wiederverwenden, nicht neu erfinden.
