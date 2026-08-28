@@ -1,12 +1,12 @@
 {
   "id": "{5E0A988D-0222-B254-88BE-61112640BBD5}",
   "author": "DG65",
-  "name": "NRG-Stack StrukturHub for IP-Symcon",
+  "name": "NRG-Stack StrukturHub",
   "url": "https://github.com/DG65/NRGStrukturHub",
   "compatibility": {
     "version": "9.0"
   },
   "version": "0.1.0",
-  "build": 5,
+  "build": 6,
   "date": 1787941200
 }
