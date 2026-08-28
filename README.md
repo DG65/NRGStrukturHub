@@ -1,7 +1,7 @@
 # StrukturHub
 
 ![Symcon](https://img.shields.io/badge/Symcon-PHPModul-blue)
-![Modul Version](https://img.shields.io/badge/Modul_Version-0.2.0-blue)
+![Modul Version](https://img.shields.io/badge/Modul_Version-0.2.1-blue)
 ![Symcon Version](https://img.shields.io/badge/Symcon_Version-9.0%2B-blue)
 ![License](https://img.shields.io/badge/License-PolyForm_Noncommercial_1.0.0-lightgrey)
 ![Check Style](https://github.com/DG65/NRGStrukturHub/actions/workflows/check-style.yml/badge.svg)
@@ -23,10 +23,11 @@ Heuristiken zu bauen.
 - **v0.2 (dieses Release) — Gerüst-Generator.** Legt Etagen-/Raum-Kategorien nach der
   Verbund-Konvention an — Panel „🏗️ Struktur-Gerüst anlegen" im Formular. Alle Begriffe frei
   wählbar (Etage/Stockwerk/Geschoss, Raum/Büro/Zimmer), per Präfix+Nummernbereich auch in
-  Masse (privat wie gewerblich, inkl. Raumnummern über den Nummernbereich im Namen). Legt
-  ausschließlich Kategorien an — **keine** Geräte-Instanzen/Links (die verknüpft man wie
-  gewohnt selbst). Idempotent: mehrfaches Anlegen mit denselben Zeilen erzeugt keine
-  Duplikate. Baut auf dem v0.1-Vertrag auf (das Erzeugte liest v0.1 automatisch korrekt ein).
+  Masse (privat wie gewerblich), Nummer wahlweise vor oder nach dem Namen ("101 Büro" /
+  "Büro 101"). Legt ausschließlich Kategorien an — **keine** Geräte-Instanzen/Links (die
+  verknüpft man wie gewohnt selbst). Idempotent: mehrfaches Anlegen mit denselben Zeilen
+  erzeugt keine Duplikate. Baut auf dem v0.1-Vertrag auf (das Erzeugte liest v0.1 automatisch
+  korrekt ein, inklusive der daraus ableitbaren Raumnummer, siehe `number`-Feld unten).
 
 ## Vertrag `STRUKT_GetStructure($id): string`
 
@@ -35,18 +36,19 @@ Rückgabe ist ein **JSON-STRING** (kein PHP-Array) — beim Aufrufer
 
 ```json
 {
-  "contractVersion": "1.0",
+  "contractVersion": "1.1",
   "instanceID": 12345,
   "structureChangedAt": 1787900000,
-  "levels": [ { "key": "eg", "label": "Erdgeschoss", "categoryID": 23050, "order": 0 } ],
+  "levels": [ { "key": "eg", "label": "Erdgeschoss", "categoryID": 23050, "order": 0, "number": null } ],
   "rooms": [
     {
       "key": "kueche",
-      "label": "Küche",
+      "label": "101 Küche",
       "level": "eg",
       "categoryID": 51304,
       "order": 0,
       "roomType": "kueche",
+      "number": "101",
       "deviceInstanceIDs": [30131, 27898, 48294]
     }
   ]
@@ -73,6 +75,12 @@ Rückgabe ist ein **JSON-STRING** (kein PHP-Array) — beim Aufrufer
   robuster als Array-Reihenfolge oder alphabetisches Sortieren nach `key`/`label`.
 - `roomType` ist eine **heuristische Best-Effort-Ableitung** aus dem Raumnamen (z. B. für eine
   Icon-Auswahl), `null` wenn nicht erkannt — kein Fachwert, nur eine Anzeige-Hilfe.
+- `number` (levels UND rooms, seit `contractVersion` 1.1) ist eine **heuristische
+  Best-Effort-Ableitung** einer Geschoss-/Raumnummer aus dem Namen — die Zahl darf vor oder
+  nach dem Namen stehen ("101 Küche"/"Küche 101"), mit oder ohne Trenner. **String, nicht
+  Zahl** (führende Nullen bleiben erhalten), `null` wenn keine Nummer erkennbar. Funktioniert
+  für jede Kategorie, nicht nur über den Gerüst-Generator erzeugte — gedacht z. B. für
+  Konsumenten, die Geräte-Idents aus der Raumnummer ableiten wollen.
 - `structureChangedAt` ändert sich **nur**, wenn sich `levels`/`rooms` inhaltlich seit dem
   letzten Aufruf tatsächlich geändert haben (interner Hash-Vergleich) — Konsumenten können
   diesen einen Wert pollen/vergleichen, statt das komplette JSON zu diffen. Es gibt **keinen**

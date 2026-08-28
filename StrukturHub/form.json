@@ -118,6 +118,7 @@
             { "caption": "Raum", "name": "Raum", "width": "200px", "add": "" },
             { "caption": "Etage", "name": "Etage", "width": "140px", "add": "" },
             { "caption": "Typ", "name": "Typ", "width": "110px", "add": "" },
+            { "caption": "Nummer", "name": "Nummer", "width": "80px", "add": "" },
             { "caption": "Reihe", "name": "Reihe", "width": "70px", "add": 0 },
             { "caption": "Geräte", "name": "Geraete", "width": "70px", "add": 0 }
           ]
@@ -154,7 +155,17 @@
             { "type": "ValidationTextBox", "name": "GenLevelPrefix", "caption": "Präfix (z. B. Etage)" },
             { "type": "NumberSpinner", "name": "GenLevelStart", "caption": "von", "value": 1 },
             { "type": "NumberSpinner", "name": "GenLevelEnd", "caption": "bis", "value": 1 },
-            { "type": "Button", "caption": "➕ Einfügen", "onClick": "echo STRUKT_AddLevelRows($id, $GenLevels, $GenLevelPrefix, $GenLevelStart, $GenLevelEnd);" }
+            {
+              "type": "Select",
+              "name": "GenLevelNumberPos",
+              "caption": "Nummer",
+              "value": "hinten",
+              "options": [
+                { "caption": "hinten (Etage 1)", "value": "hinten" },
+                { "caption": "vorne (1 Etage)", "value": "vorne" }
+              ]
+            },
+            { "type": "Button", "caption": "➕ Einfügen", "onClick": "echo STRUKT_AddLevelRows($id, $GenLevels, $GenLevelPrefix, $GenLevelStart, $GenLevelEnd, $GenLevelNumberPos);" }
           ]
         },
         {
@@ -179,8 +190,18 @@
             { "type": "ValidationTextBox", "name": "GenRoomPrefix", "caption": "Präfix (z. B. Büro)" },
             { "type": "NumberSpinner", "name": "GenRoomStart", "caption": "von", "value": 1 },
             { "type": "NumberSpinner", "name": "GenRoomEnd", "caption": "bis", "value": 1 },
+            {
+              "type": "Select",
+              "name": "GenRoomNumberPos",
+              "caption": "Nummer",
+              "value": "hinten",
+              "options": [
+                { "caption": "hinten (Büro 101)", "value": "hinten" },
+                { "caption": "vorne (101 Büro)", "value": "vorne" }
+              ]
+            },
             { "type": "ValidationTextBox", "name": "GenRoomLevel", "caption": "für Etage (leer = keine)" },
-            { "type": "Button", "caption": "➕ Einfügen", "onClick": "echo STRUKT_AddRoomRows($id, $GenRooms, $GenRoomPrefix, $GenRoomStart, $GenRoomEnd, $GenRoomLevel);" }
+            { "type": "Button", "caption": "➕ Einfügen", "onClick": "echo STRUKT_AddRoomRows($id, $GenRooms, $GenRoomPrefix, $GenRoomStart, $GenRoomEnd, $GenRoomLevel, $GenRoomNumberPos);" }
           ]
         },
         { "type": "Button", "caption": "🔍 Vorschau", "onClick": "echo STRUKT_PreviewSkeleton($id, $GenLevels, $GenRooms);" },

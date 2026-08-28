@@ -87,12 +87,12 @@ class StrukturHub extends IPSModule
      * aufrufen, niemals is_array() direkt auf das Ergebnis prüfen.
      *
      * {
-     *   "contractVersion": "1.0",
+     *   "contractVersion": "1.1",
      *   "instanceID": 12345,
      *   "structureChangedAt": 1787900000,
-     *   "levels": [ {"key":"eg","label":"Erdgeschoss","categoryID":23050,"order":0}, ... ],
-     *   "rooms":  [ {"key":"kueche","label":"Küche","level":"eg","categoryID":51304,
-     *                "order":0,"roomType":"kueche",
+     *   "levels": [ {"key":"eg","label":"Erdgeschoss","categoryID":23050,"order":0,"number":null}, ... ],
+     *   "rooms":  [ {"key":"kueche","label":"101 Küche","level":"eg","categoryID":51304,
+     *                "order":0,"roomType":"kueche","number":"101",
      *                "deviceInstanceIDs":[30131,27898,48294]}, ... ]
      * }
      *
@@ -122,6 +122,14 @@ class StrukturHub extends IPSModule
      *   Raumnamen (z. B. für eine Icon-Auswahl) aus einem festen Vokabular
      *   (siehe inferRoomType()) — "null", wenn nicht erkannt. Kein
      *   verlässlicher Fachwert, nur eine Anzeige-Hilfe.
+     * - "number" (levels UND rooms, seit contractVersion 1.1) ist eine
+     *   HEURISTISCHE Best-Effort-Ableitung einer Geschoss-/Raumnummer aus dem
+     *   Namen (siehe extractNumber()) — Zahl kann vor ODER nach dem Namen
+     *   stehen ("101 Küche"/"Küche 101"), mit/ohne Trenner. String, nicht
+     *   int (führende Nullen bleiben erhalten), "null" wenn keine Nummer
+     *   erkennbar. Funktioniert für JEDE Kategorie, nicht nur über den
+     *   Gerüst-Generator erzeugte. Kein Fachwert — z. B. für Konsumenten
+     *   gedacht, die Geräte-Idents aus der Raumnummer ableiten wollen.
      * - "structureChangedAt" (Unix-Zeitstempel) ändert sich NUR, wenn sich
      *   levels/rooms inhaltlich seit dem letzten Aufruf tatsächlich geändert
      *   haben (Hash-Vergleich intern) — Konsumenten können das als billigen
@@ -196,7 +204,7 @@ class StrukturHub extends IPSModule
     // ein "Übernehmen" dazwischen ist nicht nötig.
     // -----------------------------------------------------------------
 
-    public function AddLevelRows($rows, string $prefix, int $start, int $end): string
+    public function AddLevelRows($rows, string $prefix, int $start, int $end, string $numberPos = 'hinten'): string
     {
         $prefix = trim($prefix);
         if ($prefix === '') {
@@ -211,14 +219,14 @@ class StrukturHub extends IPSModule
 
         $list = $this->normalizeFormList($rows);
         for ($n = $start; $n <= $end; $n++) {
-            $list[] = ['Label' => $prefix . ' ' . $n];
+            $list[] = ['Label' => $this->composeGeneratedLabel($prefix, $n, $numberPos)];
         }
         $this->UpdateFormField('GenLevels', 'values', json_encode($list));
 
         return '✅ ' . ($end - $start + 1) . ' Etagen-Zeile(n) eingefügt.';
     }
 
-    public function AddRoomRows($rows, string $prefix, int $start, int $end, string $levelLabel): string
+    public function AddRoomRows($rows, string $prefix, int $start, int $end, string $levelLabel, string $numberPos = 'hinten'): string
     {
         $prefix = trim($prefix);
         if ($prefix === '') {
@@ -233,11 +241,19 @@ class StrukturHub extends IPSModule
 
         $list = $this->normalizeFormList($rows);
         for ($n = $start; $n <= $end; $n++) {
-            $list[] = ['Label' => $prefix . ' ' . $n, 'LevelLabel' => trim($levelLabel)];
+            $list[] = ['Label' => $this->composeGeneratedLabel($prefix, $n, $numberPos), 'LevelLabel' => trim($levelLabel)];
         }
         $this->UpdateFormField('GenRooms', 'values', json_encode($list));
 
         return '✅ ' . ($end - $start + 1) . ' Raum-Zeile(n) eingefügt.';
+    }
+
+    // "vorne": "101 Büro" (Nummer zuerst) — "hinten" (Default, bisheriges
+    // Verhalten): "Büro 101". Dietmar-Wunsch 28.08.2026: Gebäude-Konventionen
+    // setzen die Nummer mal vor, mal nach dem Namen.
+    private function composeGeneratedLabel(string $prefix, int $n, string $numberPos): string
+    {
+        return $numberPos === 'vorne' ? ($n . ' ' . $prefix) : ($prefix . ' ' . $n);
     }
 
     public function PreviewSkeleton($levelRows, $roomRows): string
@@ -571,6 +587,7 @@ class StrukturHub extends IPSModule
                 'Raum'     => $room['label'],
                 'Etage'    => $room['level'] !== '' ? $this->levelLabel($structure, $room['level']) : '—',
                 'Typ'      => $room['roomType'] ?? '—',
+                'Nummer'   => $room['number'] ?? '—',
                 'Reihe'    => $room['order'],
                 'Geraete'  => count($room['deviceInstanceIDs']),
             ];
@@ -597,7 +614,7 @@ class StrukturHub extends IPSModule
         $root = $this->ReadPropertyInteger('RootCategoryID');
         if ($root <= 0 || !IPS_ObjectExists($root)) {
             return [
-                'contractVersion'    => '1.0',
+                'contractVersion'    => '1.1',
                 'instanceID'         => $this->InstanceID,
                 'structureChangedAt' => 0,
                 'levels'             => [],
@@ -631,11 +648,13 @@ class StrukturHub extends IPSModule
         } else {
             foreach ($levelCatIDs as $lcid) {
                 $key = $this->resolveKey($registry, $lcid, IPS_GetName($lcid));
+                $levelLabel = IPS_GetName($lcid);
                 $levels[] = [
                     'key'        => $key,
-                    'label'      => IPS_GetName($lcid),
+                    'label'      => $levelLabel,
                     'categoryID' => $lcid,
                     'order'      => $this->objectOrder($lcid),
+                    'number'     => $this->extractNumber($levelLabel),
                 ];
                 foreach (IPS_GetChildrenIDs($lcid) as $rcid) {
                     if (!$this->isCategory($rcid)) {
@@ -649,7 +668,7 @@ class StrukturHub extends IPSModule
         $this->pruneAndSaveKeyRegistry($registry);
 
         return [
-            'contractVersion'    => '1.0',
+            'contractVersion'    => '1.1',
             'instanceID'         => $this->InstanceID,
             'structureChangedAt' => $this->touchChangeTimestamp($levels, $rooms),
             'levels'             => $levels,
@@ -667,6 +686,7 @@ class StrukturHub extends IPSModule
             'categoryID'        => $categoryID,
             'order'             => $this->objectOrder($categoryID),
             'roomType'          => $this->inferRoomType($label),
+            'number'            => $this->extractNumber($label),
             'deviceInstanceIDs' => $this->resolveRoomDevices($categoryID),
         ];
     }
@@ -737,6 +757,33 @@ class StrukturHub extends IPSModule
         // wurde ("Position" existiert im Rückgabe-Array schlicht nicht, "??"
         // fing das lautlos ab, ohne Fehler oder Warnung).
         return (int) (IPS_GetObject($id)['ObjectPosition'] ?? 0);
+    }
+
+    // Heuristische Best-Effort-Ableitung einer Geschoss-/Raumnummer aus dem
+    // Namen — NUR eine Anzeige-/Ableitungs-Hilfe (z. B. für Konsumenten, die
+    // Geräte-Idents aus der Raumnummer bilden wollen, Dietmar-Wunsch
+    // 28.08.2026), kein garantierter Fachwert. Nummer kann vor ODER nach dem
+    // Namen stehen ("101 Büro" / "Büro 101"), mit oder ohne Trenner
+    // (Leerzeichen/Punkt/Bindestrich) — funktioniert unabhängig davon, ob die
+    // Kategorie über den v0.2-Generator oder manuell entstanden ist. Rein
+    // numerische Namen ("101") zuerst behandeln, sonst würde die
+    // Nachgestellt-Regel sie fälschlich in z. B. "10"+"1" zerlegen.
+    private function extractNumber(string $label): ?string
+    {
+        $label = trim($label);
+        if ($label === '') {
+            return null;
+        }
+        if (preg_match('/^\d+$/', $label)) {
+            return $label;
+        }
+        if (preg_match('/^(.*\S)[\s.\-]*(\d+)$/u', $label, $m)) {
+            return $m[2];
+        }
+        if (preg_match('/^(\d+)[\s.\-]*(\S.*)$/u', $label, $m)) {
+            return $m[1];
+        }
+        return null;
     }
 
     // Heuristische Best-Effort-Ableitung des Raumtyps aus dem Kategorienamen,

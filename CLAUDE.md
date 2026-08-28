@@ -84,6 +84,15 @@ nachlesen, nicht Code zwischen Modulen vergleichen.
   - `inferRoomType()` (v0.1) deckt bereits privates UND gewerbliches Vokabular ab — vom
     Generator unverändert weiterverwendet (v0.1 liest die generierten Labels automatisch ein,
     keine Duplikation nötig).
+  - **Nummer vor/nach dem Namen, Nummern-Vererbung Etage→Raum→Gerät (28.08.2026):**
+    Dietmars Ergänzung — Geschoss-/Raumnummern können vor ODER nach dem Namen stehen, und
+    Geräte-Nummern (Schalter/Steckdosen) leiten sich mitunter aus der Raumnummer ab, die
+    wiederum aus der Geschossnummer abgeleitet sein kann. Umgesetzt: Generator-Massenhilfe hat
+    ein Nummer-Position-Feld (vorne/hinten); `STRUKT_GetStructure()` liefert seit
+    `contractVersion` 1.1 ein zusätzliches, heuristisch aus dem Namen abgeleitetes `number`-Feld
+    (levels UND rooms, siehe `extractNumber()`) — funktioniert für JEDE Kategorie, nicht nur
+    generator-erzeugte. Geräte-Nummern selbst bleiben außerhalb des Scopes (StrukturHub legt
+    keine Geräte an); Konsumenten, die Geräte benennen, können `number` dafür nutzen.
 
   **Bewusst nicht in v0.2 enthalten** (siehe Plan-Datei für die Begründung): keine
   Geräte-Instanzen/Links, keine automatische Wurzelkategorie-Erzeugung, kein

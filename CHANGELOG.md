@@ -3,6 +3,21 @@
 Alle nennenswerten Änderungen an diesem Modul werden hier dokumentiert.
 Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [0.2.1] - 2026-08-28
+
+### Added
+- `contractVersion` → **1.1**: neues additives Feld `number` (levels UND rooms) — heuristische
+  Best-Effort-Ableitung einer Geschoss-/Raumnummer aus dem Namen (vor oder nach dem Namen,
+  mit/ohne Trenner), String statt Zahl (führende Nullen bleiben erhalten). Funktioniert für
+  jede Kategorie, nicht nur über den Generator erzeugte. Gedacht für Konsumenten, die
+  Geräte-Idents aus der Raumnummer ableiten wollen (Dietmar-Anforderung 28.08.2026).
+- Gerüst-Generator: Nummer-Position (vorne/hinten) bei der Massen-Erzeugung wählbar
+  (`GenLevelNumberPos`/`GenRoomNumberPos`) — z. B. "101 Büro" statt "Büro 101".
+
+### Fixed
+- `order` lieferte seit Einführung immer `0` (`IPS_GetObject()['Position']` statt
+  `'ObjectPosition'` gelesen) — live beim v0.2-Testlauf gefunden.
+
 ## [0.2.0] - 2026-08-28
 
 ### Added
