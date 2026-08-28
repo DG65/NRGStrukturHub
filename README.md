@@ -31,6 +31,8 @@ Rückgabe ist ein **JSON-STRING** (kein PHP-Array) — beim Aufrufer
 ```json
 {
   "contractVersion": "1.0",
+  "instanceID": 12345,
+  "structureChangedAt": 1787900000,
   "levels": [ { "key": "eg", "label": "Erdgeschoss", "categoryID": 23050, "order": 0 } ],
   "rooms": [
     {
@@ -46,18 +48,40 @@ Rückgabe ist ein **JSON-STRING** (kein PHP-Array) — beim Aufrufer
 }
 ```
 
+- **`key`** (levels UND rooms) ist garantiert: nur Zeichen aus `[a-z0-9_]` (Umlaute
+  transliteriert), **eindeutig über levels UND rooms hinweg** (ein gemeinsamer Namensraum) und
+  **stabil über eine Umbenennung hinweg** — der Key wird beim ersten Erfassen einer Kategorie
+  aus ihrem damaligen Namen abgeleitet und danach dauerhaft an der `categoryID` festgemacht,
+  nie bei jedem Aufruf neu aus dem aktuellen Label berechnet. Konsumenten dürfen daraus
+  abgeleitete Idents/Variablen dauerhaft anlegen (z. B. `kueche_sum_power`), ohne dass eine
+  spätere Umbenennung im Objektbaum sie verwaist.
 - `deviceInstanceIDs` ist bereits **dedupliziert und um tote/namenlose Links bereinigt** —
-  Konsumenten müssen das nicht selbst nochmal lösen. Wird bei jedem Aufruf live aus dem
-  aktuellen Objektbaum berechnet (keine Zwischenspeicherung) — bei unverändertem Objektbaum
-  und unveränderter Etagen-Auswahl liefert die Methode deterministisch dasselbe Ergebnis.
+  Konsumenten müssen das nicht selbst nochmal lösen. Ein Link, dessen Ziel eine **Variable**
+  (statt einer Instanz) ist, wird auf deren **Elterninstanz** aufgelöst (z. B. ein "Licht"-Link
+  direkt auf eine Schalter-Variable eines Aktors) — nur ein Link/eine Variable ganz ohne
+  Instanz-Elternteil wird ignoriert. Wird bei jedem Aufruf live aus dem aktuellen Objektbaum
+  berechnet (keine Zwischenspeicherung) — bei unverändertem Objektbaum und unveränderter
+  Etagen-Auswahl liefert die Methode deterministisch dasselbe Ergebnis.
 - `levels` ist leer, wenn keine Etagen-Ebene bestätigt wurde; `rooms[].level` ist dann `""`
   (Räume liegen direkt unter der Wurzelkategorie).
 - `order` ist die vom Nutzer im Symcon-Objektbaum gesetzte Reihenfolge (Konsolen-Drag&Drop) —
   robuster als Array-Reihenfolge oder alphabetisches Sortieren nach `key`/`label`.
 - `roomType` ist eine **heuristische Best-Effort-Ableitung** aus dem Raumnamen (z. B. für eine
   Icon-Auswahl), `null` wenn nicht erkannt — kein Fachwert, nur eine Anzeige-Hilfe.
+- `structureChangedAt` ändert sich **nur**, wenn sich `levels`/`rooms` inhaltlich seit dem
+  letzten Aufruf tatsächlich geändert haben (interner Hash-Vergleich) — Konsumenten können
+  diesen einen Wert pollen/vergleichen, statt das komplette JSON zu diffen. Es gibt **keinen**
+  Push-Mechanismus (kein Event/keine Nachricht bei Änderung).
+- `instanceID` ist die ID dieser StrukturHub-Instanz (Debugging/Logging).
 - Immer hinter `function_exists('STRUKT_GetStructure')` aufrufen — jedes Partnermodul ist
   optional, ohne StrukturHub installiert bleibt jedes andere Modul unverändert funktionsfähig.
+
+## Mehrere Instanzen
+
+Mehrere StrukturHub-Instanzen sind ausdrücklich zulässig (z. B. Haupthaus + Nebengebäude mit
+getrennter Wurzelkategorie) — **keine Singleton-Annahme**. Konsumenten iterieren über ALLE
+Instanzen von `IPS_GetInstanceListByModuleID('{CA700334-0982-F356-0617-6952868137E9}')`, nicht
+nur die erste gefundene.
 
 ## Was StrukturHub NICHT tut (v0.1)
 

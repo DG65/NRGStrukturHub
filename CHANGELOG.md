@@ -16,6 +16,12 @@ Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
   und um tote/namenlose Links bereinigt (Ziel existiert nicht mehr).
 - `order` (Objektbaum-Position) und optionales `roomType` (heuristische Best-Effort-Ableitung
   aus dem Raumnamen) je Level/Raum — auf Wunsch von Dashboard vor dem Einfrieren ergänzt.
+- Auf Wunsch von MeterHub vor dem Einfrieren ergänzt: `key` wird jetzt persistent je
+  `categoryID` vergeben (ein gemeinsamer Namensraum über levels+rooms) und bleibt bei
+  Umbenennung stabil, statt bei jedem Aufruf neu aus dem Label berechnet zu werden; Links auf
+  Variablen (statt Instanzen) werden auf ihre Elterninstanz aufgelöst statt verworfen; neue
+  Top-Level-Felder `structureChangedAt` (Hash-basierte Änderungserkennung ohne JSON-Diff) und
+  `instanceID`; Mehrinstanz-Semantik (kein Singleton) dokumentiert.
 - Repo-Gerüst nach Verbund-Konvention: `library.json`, `LICENSE` (PolyForm Noncommercial
   1.0.0), README mit Vertrags-Dokumentation, `.github/workflows/check-style.yml`,
   `.tools/check-standalone.php`.

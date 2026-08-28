@@ -27,6 +27,12 @@ getrennten Sitzungen gearbeitet:
    ChargerHub beim MeterHub-Vertrag schon je einmal gestolpert (`is_array()` auf einem String
    schlägt still fehl). Bei jeder Erweiterung diesen Hinweis in Doku-Kommentar/README
    mitführen.
+8. **`key` ist ein garantiert stabiler Ident-Bestandteil** (MeterHub-Anforderung 28.08.2026,
+   siehe `resolveKey()`/`KeyRegistry`-Attribut in `module.php`) — NIEMALS zurückbauen auf
+   "live aus dem aktuellen Label berechnen". Ein Konsument leitet daraus dauerhafte
+   Variablen-Idents ab; ein sich änderender Key würde bei jeder Umbenennung im Objektbaum
+   Archiv-Historie verwaisen lassen. Neue Kategorien bekommen ihren Key beim ersten Erfassen,
+   danach ist er an der `categoryID` fixiert, bis die Kategorie in Symcon gelöscht wird.
 5. **Keine automatische Etagen-Erkennung.** Auf derselben Objektbaum-Ebene wie Etagen können
    Gewerke-Kategorien liegen (Energie, Heizung, Test, …) — das ist bei Dietmars eigener Anlage
    live beobachtet. Der Nutzer bestätigt einmal im Formular, welche Kategorien Etagen sind;

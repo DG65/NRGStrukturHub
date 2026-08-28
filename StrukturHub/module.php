@@ -36,6 +36,22 @@ class StrukturHub extends IPSModule
 
         $this->RegisterAttributeInteger('LastRefreshTs', 0);
 
+        // Persistente Key-Zuordnung categoryID -> key (EIN gemeinsamer
+        // Namensraum über levels UND rooms hinweg, MeterHub-Anforderung
+        // 28.08.2026). Ein Key wird beim ersten Erfassen einer Kategorie aus
+        // ihrem damaligen Namen abgeleitet und danach NIE mehr neu berechnet
+        // — Konsumenten leiten daraus stabile Idents/Variablen ab (Archiv-
+        // Historie), eine spätere Umbenennung im Objektbaum darf den Key
+        // nicht ändern. Siehe resolveKey().
+        $this->RegisterAttributeString('KeyRegistry', '{}');
+
+        // Änderungserkennung ohne volles JSON-Diffing beim Konsumenten
+        // (MeterHub/EMS-Wunsch 28.08.2026): Hash der zuletzt gelieferten
+        // levels/rooms-Struktur + Zeitpunkt der letzten tatsächlichen
+        // Änderung. Siehe touchChangeTimestamp().
+        $this->RegisterAttributeString('LastStructureHash', '');
+        $this->RegisterAttributeInteger('StructureChangedAt', 0);
+
         // Dismiss-Zustände der Formular-Hinweise (Verbund-Konvention, siehe
         // SUITE.md "Einheitliche Formular-Optik").
         $this->RegisterAttributeString('NewsAckVersion', '');
@@ -66,6 +82,8 @@ class StrukturHub extends IPSModule
      *
      * {
      *   "contractVersion": "1.0",
+     *   "instanceID": 12345,
+     *   "structureChangedAt": 1787900000,
      *   "levels": [ {"key":"eg","label":"Erdgeschoss","categoryID":23050,"order":0}, ... ],
      *   "rooms":  [ {"key":"kueche","label":"Küche","level":"eg","categoryID":51304,
      *                "order":0,"roomType":"kueche",
@@ -74,9 +92,21 @@ class StrukturHub extends IPSModule
      *
      * - "levels" ist leer, wenn keine Etagen-Ebene bestätigt wurde — "rooms[].level"
      *   ist dann ebenfalls "" (Räume liegen direkt unter der Wurzelkategorie).
+     * - "key" (levels UND rooms) ist GARANTIERT: nur Zeichen aus [a-z0-9_]
+     *   (Umlaute transliteriert), eindeutig über levels UND rooms HINWEG (ein
+     *   gemeinsamer Namensraum, nicht zwei getrennte), und STABIL über eine
+     *   Umbenennung im Objektbaum hinweg — der Key wird beim ersten Erfassen
+     *   einer categoryID aus deren damaligem Namen abgeleitet und danach
+     *   dauerhaft an dieser categoryID festgemacht (siehe resolveKey()), nie
+     *   bei jedem Aufruf neu aus dem aktuellen Label berechnet. Konsumenten
+     *   dürfen daraus abgeleitete Idents/Variablen dauerhaft anlegen, ohne
+     *   dass eine spätere Umbenennung sie verwaist.
      * - "deviceInstanceIDs" ist bereits dedupliziert und um tote/namenlose Links
      *   bereinigt (siehe resolveRoomDevices()) — Konsumenten müssen das nicht
-     *   selbst nochmal lösen.
+     *   selbst nochmal lösen. Ein Link, dessen Ziel eine VARIABLE (statt einer
+     *   Instanz) ist, wird auf deren Elterninstanz aufgelöst (z. B. ein
+     *   "Licht"-Link direkt auf eine Schalter-Variable eines Aktors) — nur ein
+     *   direkter Link/Variable ohne Instanz-Elternteil wird ignoriert.
      * - "order" ist die vom Nutzer im Symcon-Objektbaum gesetzte Reihenfolge
      *   (Konsolen-Drag&Drop, IPS-Objekt-Position) — verlässlicher als
      *   Array-Reihenfolge oder alphabetisches Sortieren nach "key"/"label"
@@ -86,8 +116,19 @@ class StrukturHub extends IPSModule
      *   Raumnamen (z. B. für eine Icon-Auswahl) aus einem festen Vokabular
      *   (siehe inferRoomType()) — "null", wenn nicht erkannt. Kein
      *   verlässlicher Fachwert, nur eine Anzeige-Hilfe.
-     * - Ohne konfigurierte Wurzelkategorie liefert dies leere levels/rooms-Arrays,
-     *   kein Fehler.
+     * - "structureChangedAt" (Unix-Zeitstempel) ändert sich NUR, wenn sich
+     *   levels/rooms inhaltlich seit dem letzten Aufruf tatsächlich geändert
+     *   haben (Hash-Vergleich intern) — Konsumenten können das als billigen
+     *   Änderungs-Check pollen, statt das komplette JSON zu diffen. Es gibt
+     *   KEINEN Push-Mechanismus (kein Event/keine Nachricht bei Änderung).
+     * - "instanceID" ist die ID dieser StrukturHub-Instanz (Debugging/Logging).
+     * - Ohne konfigurierte Wurzelkategorie liefert dies leere levels/rooms-Arrays
+     *   und "structureChangedAt": 0, kein Fehler.
+     * - MEHRERE StrukturHub-Instanzen sind ausdrücklich zulässig (z. B. Haupthaus
+     *   + Nebengebäude mit getrennter Wurzelkategorie) — KEINE Singleton-Annahme.
+     *   Konsumenten iterieren über ALLE Instanzen von
+     *   IPS_GetInstanceListByModuleID('{CA700334-0982-F356-0617-6952868137E9}'),
+     *   nicht nur die erste gefundene.
      */
     public function GetStructure(): string
     {
@@ -300,7 +341,13 @@ class StrukturHub extends IPSModule
     {
         $root = $this->ReadPropertyInteger('RootCategoryID');
         if ($root <= 0 || !IPS_ObjectExists($root)) {
-            return ['contractVersion' => '1.0', 'levels' => [], 'rooms' => []];
+            return [
+                'contractVersion'    => '1.0',
+                'instanceID'         => $this->InstanceID,
+                'structureChangedAt' => 0,
+                'levels'             => [],
+                'rooms'              => [],
+            ];
         }
 
         $levelFlags = $this->levelFlags();
@@ -309,10 +356,13 @@ class StrukturHub extends IPSModule
             fn($cid) => $this->isCategory($cid) && !empty($levelFlags[$cid])
         );
 
-        $levels    = [];
-        $rooms     = [];
-        $levelKeys = [];
-        $roomKeys  = [];
+        // EIN gemeinsamer Key-Namensraum über levels UND rooms hinweg,
+        // persistiert je categoryID (MeterHub-Anforderung 28.08.2026) —
+        // siehe resolveKey().
+        $registry = $this->loadKeyRegistry();
+
+        $levels = [];
+        $rooms  = [];
 
         if (empty($levelCatIDs)) {
             // Keine Etagen-Ebene bestätigt: Kinder der Wurzelkategorie sind
@@ -321,11 +371,11 @@ class StrukturHub extends IPSModule
                 if (!$this->isCategory($cid)) {
                     continue;
                 }
-                $rooms[] = $this->buildRoom($cid, '', $roomKeys);
+                $rooms[] = $this->buildRoom($cid, '', $registry);
             }
         } else {
             foreach ($levelCatIDs as $lcid) {
-                $key = $this->uniqueKey(IPS_GetName($lcid), $levelKeys);
+                $key = $this->resolveKey($registry, $lcid, IPS_GetName($lcid));
                 $levels[] = [
                     'key'        => $key,
                     'label'      => IPS_GetName($lcid),
@@ -336,19 +386,27 @@ class StrukturHub extends IPSModule
                     if (!$this->isCategory($rcid)) {
                         continue;
                     }
-                    $rooms[] = $this->buildRoom($rcid, $key, $roomKeys);
+                    $rooms[] = $this->buildRoom($rcid, $key, $registry);
                 }
             }
         }
 
-        return ['contractVersion' => '1.0', 'levels' => $levels, 'rooms' => $rooms];
+        $this->pruneAndSaveKeyRegistry($registry);
+
+        return [
+            'contractVersion'    => '1.0',
+            'instanceID'         => $this->InstanceID,
+            'structureChangedAt' => $this->touchChangeTimestamp($levels, $rooms),
+            'levels'             => $levels,
+            'rooms'              => $rooms,
+        ];
     }
 
-    private function buildRoom(int $categoryID, string $levelKey, array &$roomKeys): array
+    private function buildRoom(int $categoryID, string $levelKey, array &$registry): array
     {
         $label = IPS_GetName($categoryID);
         return [
-            'key'               => $this->uniqueKey($label, $roomKeys),
+            'key'               => $this->resolveKey($registry, $categoryID, $label),
             'label'             => $label,
             'level'             => $levelKey,
             'categoryID'        => $categoryID,
@@ -356,6 +414,60 @@ class StrukturHub extends IPSModule
             'roomType'          => $this->inferRoomType($label),
             'deviceInstanceIDs' => $this->resolveRoomDevices($categoryID),
         ];
+    }
+
+    // -----------------------------------------------------------------
+    // Persistente Keys (categoryID -> key), Änderungserkennung
+    // -----------------------------------------------------------------
+
+    private function loadKeyRegistry(): array
+    {
+        $data = json_decode($this->ReadAttributeString('KeyRegistry'), true);
+        return is_array($data) ? $data : [];
+    }
+
+    // Liefert den persistierten Key einer categoryID; erzeugt und persistiert
+    // beim ERSTEN Erfassen einen neuen (aus dem damaligen Label abgeleitet,
+    // eindeutig gegen ALLE bereits vergebenen Keys — levels UND rooms teilen
+    // sich einen Namensraum). Eine spätere Umbenennung der Kategorie ändert
+    // den bereits vergebenen Key NICHT mehr.
+    private function resolveKey(array &$registry, int $categoryID, string $label): string
+    {
+        if (isset($registry[$categoryID])) {
+            return $registry[$categoryID];
+        }
+        $used = array_values($registry);
+        $key  = $this->uniqueKey($label, $used);
+        $registry[$categoryID] = $key;
+        return $key;
+    }
+
+    // Entfernt nur Einträge, deren Kategorie in Symcon tatsächlich gelöscht
+    // wurde — NICHT, wenn eine Kategorie nur gerade nicht Teil der aktuell
+    // gewählten Struktur ist (z. B. Etagen-Häkchen kurzzeitig entfernt), damit
+    // der Key bei Rückkehr stabil bleibt.
+    private function pruneAndSaveKeyRegistry(array $registry): void
+    {
+        foreach (array_keys($registry) as $cid) {
+            if (!IPS_ObjectExists((int) $cid)) {
+                unset($registry[$cid]);
+            }
+        }
+        $this->WriteAttributeString('KeyRegistry', json_encode($registry));
+    }
+
+    // Aktualisiert structureChangedAt nur, wenn sich levels/rooms inhaltlich
+    // seit dem letzten Aufruf wirklich geändert haben (Hash-Vergleich) —
+    // spart Konsumenten das Diffen des kompletten JSON (MeterHub/EMS-Wunsch
+    // 28.08.2026).
+    private function touchChangeTimestamp(array $levels, array $rooms): int
+    {
+        $hash = md5(json_encode(['levels' => $levels, 'rooms' => $rooms], JSON_UNESCAPED_UNICODE));
+        if ($hash !== $this->ReadAttributeString('LastStructureHash')) {
+            $this->WriteAttributeString('LastStructureHash', $hash);
+            $this->WriteAttributeInteger('StructureChangedAt', time());
+        }
+        return $this->ReadAttributeInteger('StructureChangedAt');
     }
 
     // Vom Nutzer im Objektbaum gesetzte Sortierposition (Konsolen-Drag&Drop) —
@@ -414,29 +526,51 @@ class StrukturHub extends IPSModule
         return null;
     }
 
-    // Sammelt die Geräte-Instanzen eines Raums: direkte Instanz-Kinder UND
-    // Links, deren Ziel eine Instanz ist. Dedupliziert (doppelte Links auf
-    // dieselbe Instanz, live an Dietmars Anlage beobachtet: Geschirrspüler
-    // 2x in der Küche verlinkt) und filtert tote/namenlose Links (Ziel
-    // existiert nicht mehr — IPS zeigt die dann als "Unnamed Object").
+    // Sammelt die Geräte-Instanzen eines Raums: direkte Instanz-Kinder, Links
+    // auf Instanzen, sowie Variablen (direkt oder per Link) — dort wird die
+    // ELTERNINSTANZ der Variable aufgenommen (MeterHub-Fund 28.08.2026: ein
+    // "Licht"-Link zeigt bei Dietmar direkt auf eine Schalter-Variable eines
+    // Aktors, nicht auf dessen Instanz; ohne Auflösung ginge der Messpunkt
+    // still verloren). Dedupliziert (doppelte Links auf dieselbe Instanz,
+    // live an Dietmars Anlage beobachtet: Geschirrspüler 2x in der Küche
+    // verlinkt) und filtert tote/namenlose Links (Ziel existiert nicht mehr
+    // — IPS zeigt die dann als "Unnamed Object") sowie Variablen ohne
+    // Instanz-Elternteil (kein sinnvolles Ziel, wird ignoriert).
     private function resolveRoomDevices(int $categoryID): array
     {
         $ids = [];
         foreach (IPS_GetChildrenIDs($categoryID) as $cid) {
             $obj = IPS_GetObject($cid);
-            if ($obj['ObjectType'] === OBJECTTYPE_INSTANCE) {
-                $ids[] = $cid;
-                continue;
-            }
-            if ($obj['ObjectType'] === OBJECTTYPE_LINK) {
-                $target = IPS_GetLink($cid)['TargetID'];
-                if ($target > 0 && IPS_ObjectExists($target) && IPS_GetObject($target)['ObjectType'] === OBJECTTYPE_INSTANCE) {
-                    $ids[] = $target;
-                }
-                // Ziel existiert nicht (mehr) -> toter/namenloser Link, bewusst übersprungen.
+            switch ($obj['ObjectType']) {
+                case OBJECTTYPE_INSTANCE:
+                    $ids[] = $cid;
+                    break;
+                case OBJECTTYPE_VARIABLE:
+                    $this->addInstanceOfVariable($cid, $ids);
+                    break;
+                case OBJECTTYPE_LINK:
+                    $target = IPS_GetLink($cid)['TargetID'];
+                    if ($target <= 0 || !IPS_ObjectExists($target)) {
+                        break; // toter/namenloser Link, bewusst übersprungen.
+                    }
+                    $targetObj = IPS_GetObject($target);
+                    if ($targetObj['ObjectType'] === OBJECTTYPE_INSTANCE) {
+                        $ids[] = $target;
+                    } elseif ($targetObj['ObjectType'] === OBJECTTYPE_VARIABLE) {
+                        $this->addInstanceOfVariable($target, $ids);
+                    }
+                    break;
             }
         }
         return array_values(array_unique($ids));
+    }
+
+    private function addInstanceOfVariable(int $variableID, array &$ids): void
+    {
+        $parent = IPS_GetParent($variableID);
+        if ($parent > 0 && IPS_ObjectExists($parent) && IPS_GetObject($parent)['ObjectType'] === OBJECTTYPE_INSTANCE) {
+            $ids[] = $parent;
+        }
     }
 
     private function isCategory(int $id): bool
