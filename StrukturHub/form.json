@@ -78,7 +78,8 @@
           "caption": "Kategorie-ID",
           "name": "CategoryID",
           "width": "110px",
-          "add": 0
+          "add": 0,
+          "save": true
         }
       ]
     },
