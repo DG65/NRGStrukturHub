@@ -146,7 +146,10 @@ class StrukturHub extends IPSModule
         $this->WriteAttributeInteger('LastRefreshTs', time());
 
         $this->UpdateFormField('StatusLine', 'caption', $this->statusLineText($structure));
-        $this->UpdateFormField('StructurePreview', 'values', $this->previewRows($structure));
+        // 'values' erwartet einen JSON-STRING, kein PHP-Array (RPC-Layer
+        // konvertiert verschachtelte Arrays nicht automatisch) — Live-Fund
+        // Dietmar 28.08.2026: "Cannot auto-convert value for parameter Value".
+        $this->UpdateFormField('StructurePreview', 'values', json_encode($this->previewRows($structure)));
 
         $roomCount = count($structure['rooms']);
         if ($this->ReadPropertyInteger('RootCategoryID') <= 0) {
