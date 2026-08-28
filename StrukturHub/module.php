@@ -731,7 +731,12 @@ class StrukturHub extends IPSModule
     // z. B. "Dachgeschoss" alphabetisch vor "Erdgeschoss" einsortieren).
     private function objectOrder(int $id): int
     {
-        return (int) (IPS_GetObject($id)['Position'] ?? 0);
+        // IPS_GetObject() liefert den Schlüssel "ObjectPosition", NICHT
+        // "Position" — Live-Fund 28.08.2026 beim v0.2-Testlauf: order war
+        // seit Einführung immer 0, weil der falsche Array-Schlüssel gelesen
+        // wurde ("Position" existiert im Rückgabe-Array schlicht nicht, "??"
+        // fing das lautlos ab, ohne Fehler oder Warnung).
+        return (int) (IPS_GetObject($id)['ObjectPosition'] ?? 0);
     }
 
     // Heuristische Best-Effort-Ableitung des Raumtyps aus dem Kategorienamen,
