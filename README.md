@@ -31,13 +31,15 @@ Rückgabe ist ein **JSON-STRING** (kein PHP-Array) — beim Aufrufer
 ```json
 {
   "contractVersion": "1.0",
-  "levels": [ { "key": "eg", "label": "Erdgeschoss", "categoryID": 23050 } ],
+  "levels": [ { "key": "eg", "label": "Erdgeschoss", "categoryID": 23050, "order": 0 } ],
   "rooms": [
     {
       "key": "kueche",
       "label": "Küche",
       "level": "eg",
       "categoryID": 51304,
+      "order": 0,
+      "roomType": "kueche",
       "deviceInstanceIDs": [30131, 27898, 48294]
     }
   ]
@@ -45,9 +47,15 @@ Rückgabe ist ein **JSON-STRING** (kein PHP-Array) — beim Aufrufer
 ```
 
 - `deviceInstanceIDs` ist bereits **dedupliziert und um tote/namenlose Links bereinigt** —
-  Konsumenten müssen das nicht selbst nochmal lösen.
+  Konsumenten müssen das nicht selbst nochmal lösen. Wird bei jedem Aufruf live aus dem
+  aktuellen Objektbaum berechnet (keine Zwischenspeicherung) — bei unverändertem Objektbaum
+  und unveränderter Etagen-Auswahl liefert die Methode deterministisch dasselbe Ergebnis.
 - `levels` ist leer, wenn keine Etagen-Ebene bestätigt wurde; `rooms[].level` ist dann `""`
   (Räume liegen direkt unter der Wurzelkategorie).
+- `order` ist die vom Nutzer im Symcon-Objektbaum gesetzte Reihenfolge (Konsolen-Drag&Drop) —
+  robuster als Array-Reihenfolge oder alphabetisches Sortieren nach `key`/`label`.
+- `roomType` ist eine **heuristische Best-Effort-Ableitung** aus dem Raumnamen (z. B. für eine
+  Icon-Auswahl), `null` wenn nicht erkannt — kein Fachwert, nur eine Anzeige-Hilfe.
 - Immer hinter `function_exists('STRUKT_GetStructure')` aufrufen — jedes Partnermodul ist
   optional, ohne StrukturHub installiert bleibt jedes andere Modul unverändert funktionsfähig.
 

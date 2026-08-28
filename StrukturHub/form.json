@@ -106,9 +106,11 @@
           "delete": false,
           "loadValuesFromConfiguration": false,
           "columns": [
-            { "caption": "Raum", "name": "Raum", "width": "220px", "add": "" },
-            { "caption": "Etage", "name": "Etage", "width": "160px", "add": "" },
-            { "caption": "Geräte", "name": "Geraete", "width": "90px", "add": 0 }
+            { "caption": "Raum", "name": "Raum", "width": "200px", "add": "" },
+            { "caption": "Etage", "name": "Etage", "width": "140px", "add": "" },
+            { "caption": "Typ", "name": "Typ", "width": "110px", "add": "" },
+            { "caption": "Reihe", "name": "Reihe", "width": "70px", "add": 0 },
+            { "caption": "Geräte", "name": "Geraete", "width": "70px", "add": 0 }
           ]
         }
       ]

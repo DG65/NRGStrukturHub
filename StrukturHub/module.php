@@ -66,9 +66,10 @@ class StrukturHub extends IPSModule
      *
      * {
      *   "contractVersion": "1.0",
-     *   "levels": [ {"key":"eg","label":"Erdgeschoss","categoryID":23050}, ... ],
-     *   "rooms":  [ {"key":"kueche","label":"Küche","level":"eg",
-     *                "categoryID":51304,"deviceInstanceIDs":[30131,27898,48294]}, ... ]
+     *   "levels": [ {"key":"eg","label":"Erdgeschoss","categoryID":23050,"order":0}, ... ],
+     *   "rooms":  [ {"key":"kueche","label":"Küche","level":"eg","categoryID":51304,
+     *                "order":0,"roomType":"kueche",
+     *                "deviceInstanceIDs":[30131,27898,48294]}, ... ]
      * }
      *
      * - "levels" ist leer, wenn keine Etagen-Ebene bestätigt wurde — "rooms[].level"
@@ -76,6 +77,15 @@ class StrukturHub extends IPSModule
      * - "deviceInstanceIDs" ist bereits dedupliziert und um tote/namenlose Links
      *   bereinigt (siehe resolveRoomDevices()) — Konsumenten müssen das nicht
      *   selbst nochmal lösen.
+     * - "order" ist die vom Nutzer im Symcon-Objektbaum gesetzte Reihenfolge
+     *   (Konsolen-Drag&Drop, IPS-Objekt-Position) — verlässlicher als
+     *   Array-Reihenfolge oder alphabetisches Sortieren nach "key"/"label"
+     *   (sonst würde z. B. "Dachgeschoss" vor "Erdgeschoss" einsortieren).
+     *   Aufsteigend sortieren, bei Gleichstand ist die Reihenfolge beliebig.
+     * - "roomType" ist eine HEURISTISCHE Best-Effort-Ableitung aus dem
+     *   Raumnamen (z. B. für eine Icon-Auswahl) aus einem festen Vokabular
+     *   (siehe inferRoomType()) — "null", wenn nicht erkannt. Kein
+     *   verlässlicher Fachwert, nur eine Anzeige-Hilfe.
      * - Ohne konfigurierte Wurzelkategorie liefert dies leere levels/rooms-Arrays,
      *   kein Fehler.
      */
@@ -262,9 +272,11 @@ class StrukturHub extends IPSModule
         $rows = [];
         foreach ($structure['rooms'] as $room) {
             $rows[] = [
-                'Raum'    => $room['label'],
-                'Etage'   => $room['level'] !== '' ? $this->levelLabel($structure, $room['level']) : '—',
-                'Geraete' => count($room['deviceInstanceIDs']),
+                'Raum'     => $room['label'],
+                'Etage'    => $room['level'] !== '' ? $this->levelLabel($structure, $room['level']) : '—',
+                'Typ'      => $room['roomType'] ?? '—',
+                'Reihe'    => $room['order'],
+                'Geraete'  => count($room['deviceInstanceIDs']),
             ];
         }
         return $rows;
@@ -314,7 +326,12 @@ class StrukturHub extends IPSModule
         } else {
             foreach ($levelCatIDs as $lcid) {
                 $key = $this->uniqueKey(IPS_GetName($lcid), $levelKeys);
-                $levels[] = ['key' => $key, 'label' => IPS_GetName($lcid), 'categoryID' => $lcid];
+                $levels[] = [
+                    'key'        => $key,
+                    'label'      => IPS_GetName($lcid),
+                    'categoryID' => $lcid,
+                    'order'      => $this->objectOrder($lcid),
+                ];
                 foreach (IPS_GetChildrenIDs($lcid) as $rcid) {
                     if (!$this->isCategory($rcid)) {
                         continue;
@@ -329,13 +346,72 @@ class StrukturHub extends IPSModule
 
     private function buildRoom(int $categoryID, string $levelKey, array &$roomKeys): array
     {
+        $label = IPS_GetName($categoryID);
         return [
-            'key'               => $this->uniqueKey(IPS_GetName($categoryID), $roomKeys),
-            'label'             => IPS_GetName($categoryID),
+            'key'               => $this->uniqueKey($label, $roomKeys),
+            'label'             => $label,
             'level'             => $levelKey,
             'categoryID'        => $categoryID,
+            'order'             => $this->objectOrder($categoryID),
+            'roomType'          => $this->inferRoomType($label),
             'deviceInstanceIDs' => $this->resolveRoomDevices($categoryID),
         ];
+    }
+
+    // Vom Nutzer im Objektbaum gesetzte Sortierposition (Konsolen-Drag&Drop) —
+    // robuster für Konsumenten als Array-Reihenfolge oder alphabetisches
+    // Sortieren nach key/label (Dashboard-Wunsch, 28.08.2026: sonst würde
+    // z. B. "Dachgeschoss" alphabetisch vor "Erdgeschoss" einsortieren).
+    private function objectOrder(int $id): int
+    {
+        return (int) (IPS_GetObject($id)['Position'] ?? 0);
+    }
+
+    // Heuristische Best-Effort-Ableitung des Raumtyps aus dem Kategorienamen,
+    // NUR für Anzeige-Zwecke (z. B. Icon-Auswahl, Dashboard-Wunsch
+    // 28.08.2026) — kein Fachwert, keine Garantie. Token-Abgleich (nicht
+    // Substring) gegen ein festes deutsches Vokabular, damit z. B. "wc" nicht
+    // versehentlich mitten in einem anderen Wort matcht. Unbekannt -> null,
+    // niemals raten/erfinden.
+    private function inferRoomType(string $label): ?string
+    {
+        static $synonyms = [
+            'kueche'        => ['kueche'],
+            'bad'           => ['bad', 'badezimmer', 'dusche'],
+            'wc'            => ['wc', 'toilette'],
+            'wohnzimmer'    => ['wohnzimmer', 'wohnen'],
+            'schlafzimmer'  => ['schlafzimmer', 'schlafen'],
+            'kinderzimmer'  => ['kinderzimmer'],
+            'arbeitszimmer' => ['arbeitszimmer', 'buero', 'office'],
+            'esszimmer'     => ['esszimmer', 'essen'],
+            'flur'          => ['flur', 'diele', 'windfang'],
+            'keller'        => ['keller'],
+            'dachboden'     => ['dachboden', 'spitzboden'],
+            'hwr'           => ['hwr', 'hauswirtschaftsraum', 'hauswirtschaft'],
+            'vorrat'        => ['vorrat', 'vorratsraum', 'speisekammer'],
+            'garage'        => ['garage'],
+            'carport'       => ['carport'],
+            'schuppen'      => ['schuppen', 'geraeteschuppen'],
+            'terrasse'      => ['terrasse'],
+            'balkon'        => ['balkon'],
+            'garten'        => ['garten'],
+            'treppe'        => ['treppe', 'treppenhaus'],
+            'technik'       => ['technik', 'technikraum', 'hausanschlussraum'],
+            'sauna'         => ['sauna'],
+            'pool'          => ['pool', 'schwimmbad'],
+            'gaestezimmer'  => ['gaestezimmer', 'gaeste'],
+            'abstellraum'   => ['abstellraum', 'abstellkammer', 'nebenraum'],
+        ];
+
+        $slug   = strtr(mb_strtolower($label), ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss']);
+        $tokens = preg_split('/[^a-z0-9]+/', $slug, -1, PREG_SPLIT_NO_EMPTY);
+
+        foreach ($synonyms as $type => $words) {
+            if (array_intersect($tokens, $words)) {
+                return $type;
+            }
+        }
+        return null;
     }
 
     // Sammelt die Geräte-Instanzen eines Raums: direkte Instanz-Kinder UND

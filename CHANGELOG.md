@@ -14,6 +14,8 @@ Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
   Button „Struktur jetzt einlesen“ mit sichtbarer Rückmeldung + Vorschau-Tabelle.
 - `deviceInstanceIDs` je Raum bereits dedupliziert (doppelte Links auf dieselbe Instanz)
   und um tote/namenlose Links bereinigt (Ziel existiert nicht mehr).
+- `order` (Objektbaum-Position) und optionales `roomType` (heuristische Best-Effort-Ableitung
+  aus dem Raumnamen) je Level/Raum — auf Wunsch von Dashboard vor dem Einfrieren ergänzt.
 - Repo-Gerüst nach Verbund-Konvention: `library.json`, `LICENSE` (PolyForm Noncommercial
   1.0.0), README mit Vertrags-Dokumentation, `.github/workflows/check-style.yml`,
   `.tools/check-standalone.php`.
