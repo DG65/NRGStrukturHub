@@ -3,6 +3,22 @@
 Alle nennenswerten Änderungen an diesem Modul werden hier dokumentiert.
 Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [0.2.0] - 2026-08-28
+
+### Added
+- Gerüst-Generator (Panel „🏗️ Struktur-Gerüst anlegen"): legt Etagen-/Raum-Kategorien nach
+  der Verbund-Konvention an (`STRUKT_AddLevelRows`/`AddRoomRows`/`PreviewSkeleton`/
+  `BuildSkeleton`). Alle Begriffe frei wählbar (Etage/Stockwerk/Geschoss, Raum/Büro/Zimmer),
+  per Präfix+Nummernbereich auch in Masse — deckt sowohl privaten als auch gewerblichen
+  Gebrauch ab (Dietmars ausdrückliche Anforderung vor Baubeginn, siehe `CLAUDE.md`).
+- Vorschau vor jeder echten Anlage (kein Schreibzugriff), Bestätigungs-Checkbox + nativer
+  Bestätigungsdialog vor „Jetzt anlegen“. Idempotent über einen stabilen Ident je Kategorie
+  (`strukt_<slug>`) — mehrfaches Anlegen mit denselben Zeilen erzeugt keine Duplikate,
+  Umbenennung im Formular relabelt statt neu anzulegen.
+- Legt ausschließlich Kategorien an, keine Geräte-Instanzen/Links (bewusste Abgrenzung).
+- Frisch angelegte Etagen-Kategorien werden im v0.1-Formular direkt vorgehäkelt (nur in der
+  offenen Maske, keine Selbstpersistenz) — spart das manuelle Wiederfinden nach dem Anlegen.
+
 ## [0.1.0] - 2026-08-28
 
 ### Added

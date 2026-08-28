@@ -61,24 +61,30 @@ nachlesen, nicht Code zwischen Modulen vergleichen.
 
 ## Roadmap
 
-- **v0.1 (aktuell):** Read-only-Auskunft über bestehende Struktur.
-- **v0.2 (geplant):** Gerüst-Generator für Einsteiger — Kategorien + Links nach Konvention
-  anlegen. Profitiert vom in v0.1 etablierten Vertrag (das Erzeugte ist per Definition
-  vertragskonform).
+- **v0.1:** Read-only-Auskunft über bestehende Struktur. Live an Dietmars Anlage verifiziert.
+- **v0.2 (aktuell):** Gerüst-Generator — legt Etagen-/Raum-Kategorien nach Konvention an
+  (`AddLevelRows`/`AddRoomRows`/`PreviewSkeleton`/`BuildSkeleton` in `module.php`, Panel
+  „🏗️ Struktur-Gerüst anlegen" im Formular). Profitiert vom in v0.1 etablierten Vertrag (das
+  Erzeugte ist per Definition vertragskonform — v0.1 liest die neuen Kategorien ohne Änderung
+  korrekt ein).
 
-  **Anforderung Dietmar (28.08.2026), explizit VOR Baubeginn festgehalten:** Der Generator
-  darf NICHT nur den privaten Wohnhaus-Fall abdecken (Grundregel "keine eigene Anlage als
-  Norm", siehe SUITE.md) — er muss auch den **gewerblichen Bereich** bedienen können: ganze
-  Bürogebäude/Etagen/Räume **in Masse** anlegen, inkl. Raumnummern (z. B. "Büro 204", nicht
-  nur freie Namen wie "Küche"). Alle Begriffe/Strukturannahmen müssen **konfigurierbar bzw.
-  abfragbar** sein, nicht hartkodiert — das betrifft mindestens:
-  - Terminologie (Etage/Stockwerk/Geschoss, Raum/Büro/Zimmer) statt fester Wohnhaus-Begriffe.
-  - Masseneingabe/Bulk-Anlage (z. B. Nummernbereich "101–150" statt Raum für Raum einzeln),
-    nicht nur ein Formular pro Raum.
-  - Raumnummer als eigenes, vom freien Label unterscheidbares Konzept, falls Nutzer nach
-    Nummer statt Name gruppieren/sortieren wollen (v0.1 deckt das bereits ab, sofern die
-    Nummer Teil des Kategorienamens ist — `rooms[].label` ist bewusst freier Text; erst bei
-    echtem Bedarf ein eigenes strukturiertes Feld einführen, kein Vorgriff ohne Anwendungsfall).
-  - `inferRoomType()` (siehe module.php) deckt seit 28.08.2026 bereits sowohl privates als
-    auch gewerbliches Vokabular ab (Büro/Besprechungsraum/Lager/Empfang/…) — bei v0.2 als
-    Ausgangspunkt für Raumtyp-Vorlagen im Generator wiederverwenden, nicht neu erfinden.
+  **Anforderung Dietmar (28.08.2026), vor Baubeginn festgehalten — Umsetzung s. u.:** Der
+  Generator darf NICHT nur den privaten Wohnhaus-Fall abdecken (Grundregel "keine eigene
+  Anlage als Norm", siehe SUITE.md) — er muss auch den **gewerblichen Bereich** bedienen
+  können: ganze Bürogebäude/Etagen/Räume **in Masse** anlegen, inkl. Raumnummern, alle
+  Begriffe/Strukturannahmen **konfigurierbar/abfragbar**, nicht hartkodiert.
+  - **Terminologie:** frei — Etagen/Räume sind reine Freitext-Zeilen (`GenLevels`/`GenRooms`),
+    keine festen Wörter wie "Etage"/"Raum" im Datenmodell, nur als Platzhalter-Beispiele im
+    Formular.
+  - **Masseneingabe:** `AddLevelRows`/`AddRoomRows` fügen per Präfix+Start+Ende viele Zeilen
+    auf einmal ein (z. B. "Büro" 101–150) — Raumnummer ist dabei einfach Teil des generierten
+    Labels, kein eigenes Feld (bewusste Scope-Entscheidung, siehe Plan
+    `~/.claude/plans/gentle-inventing-puddle.md`: erst bei konkretem Konsumenten-Bedarf ein
+    strukturiertes Feld einführen).
+  - `inferRoomType()` (v0.1) deckt bereits privates UND gewerbliches Vokabular ab — vom
+    Generator unverändert weiterverwendet (v0.1 liest die generierten Labels automatisch ein,
+    keine Duplikation nötig).
+
+  **Bewusst nicht in v0.2 enthalten** (siehe Plan-Datei für die Begründung): keine
+  Geräte-Instanzen/Links, keine automatische Wurzelkategorie-Erzeugung, kein
+  Zero-Padding/CSV-Import bei der Massen-Erzeugung.

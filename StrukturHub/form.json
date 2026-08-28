@@ -3,13 +3,17 @@
     {
       "type": "ExpansionPanel",
       "name": "NewsPanel",
-      "caption": "🆕 Neu in Version 0.1.0",
+      "caption": "🆕 Neu in Version 0.2.0",
       "expanded": true,
       "visible": true,
       "items": [
         {
           "type": "Label",
-          "caption": "Erste Version: liest die bestehende Objektbaum-Struktur (Etagen/Räume/Geräte-Instanzen) ein und stellt sie anderen NRG-Stack-Modulen als Vertrag (STRUKT_GetStructure) bereit. Legt nichts an, ändert nichts — reine Auskunft."
+          "caption": "Neu: Gerüst-Generator (Panel „🏗️ Struktur-Gerüst anlegen“) — legt Etagen-/Raum-Kategorien nach der Verbund-Konvention an, auch in Masse per Präfix+Nummernbereich (privat wie gewerblich). Legt weiterhin keine Geräte-Verknüpfungen an."
+        },
+        {
+          "type": "Label",
+          "caption": "Seit 0.1.0: liest die bestehende Objektbaum-Struktur (Etagen/Räume/Geräte-Instanzen) ein und stellt sie anderen NRG-Stack-Modulen als Vertrag (STRUKT_GetStructure) bereit."
         },
         {
           "type": "Button",
@@ -38,6 +42,10 @@
         {
           "type": "Label",
           "caption": "Vertrag für andere Module: STRUKT_GetStructure($id) liefert einen JSON-STRING (kein PHP-Array!) mit contractVersion/levels/rooms. Immer hinter function_exists('STRUKT_GetStructure') aufrufen."
+        },
+        {
+          "type": "Label",
+          "caption": "Gerüst-Generator (Panel weiter unten): Zeilen in „Etagen“/„Räume“ eintragen (frei benennbar — egal ob Etage/Stockwerk/Geschoss, Raum/Büro/Zimmer), bei Bedarf über Präfix+Nummernbereich viele Zeilen auf einmal einfügen. „Vorschau“ zeigt, was passieren würde, ohne etwas anzulegen. „Jetzt anlegen“ erzeugt die Kategorien wirklich — mehrfaches Anlegen mit denselben Zeilen legt nichts doppelt an. Legt KEINE Geräte-Verknüpfungen an, nur das Kategorie-Gerüst."
         }
       ]
     },
@@ -114,6 +122,90 @@
             { "caption": "Geräte", "name": "Geraete", "width": "70px", "add": 0 }
           ]
         }
+      ]
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "🏗️ Struktur-Gerüst anlegen",
+      "expanded": false,
+      "items": [
+        {
+          "type": "Label",
+          "caption": "Legt für dich Etagen- und Raum-Kategorien nach der Verbund-Konvention an — privat oder gewerblich, alle Begriffe frei wählbar (z. B. „Etage“/„Stockwerk“/„Geschoss“, „Raum“/„Büro“/„Zimmer“). Legt NUR Kategorien an, keine Geräte-Verknüpfungen — die verlinkst du danach wie gewohnt selbst."
+        },
+        {
+          "type": "Label",
+          "caption": "1. Etagen (optional — leer lassen für eine flache Struktur ohne Etagen-Ebene):"
+        },
+        {
+          "type": "List",
+          "name": "GenLevels",
+          "caption": "Etagen",
+          "rowCount": 6,
+          "add": true,
+          "delete": true,
+          "columns": [
+            { "caption": "Bezeichnung", "name": "Label", "width": "auto", "add": "", "edit": { "type": "ValidationTextBox" } }
+          ]
+        },
+        {
+          "type": "RowLayout",
+          "items": [
+            { "type": "ValidationTextBox", "name": "GenLevelPrefix", "caption": "Präfix (z. B. Etage)" },
+            { "type": "NumberSpinner", "name": "GenLevelStart", "caption": "von", "value": 1 },
+            { "type": "NumberSpinner", "name": "GenLevelEnd", "caption": "bis", "value": 1 },
+            { "type": "Button", "caption": "➕ Einfügen", "onClick": "echo STRUKT_AddLevelRows($id, $GenLevels, $GenLevelPrefix, $GenLevelStart, $GenLevelEnd);" }
+          ]
+        },
+        {
+          "type": "Label",
+          "caption": "2. Räume (Bezeichnung + optional zugehörige Etage — Text muss exakt zu einer Zeile oben passen, sonst landet der Raum direkt unter der Wurzelkategorie):"
+        },
+        {
+          "type": "List",
+          "name": "GenRooms",
+          "caption": "Räume",
+          "rowCount": 10,
+          "add": true,
+          "delete": true,
+          "columns": [
+            { "caption": "Bezeichnung", "name": "Label", "width": "260px", "add": "", "edit": { "type": "ValidationTextBox" } },
+            { "caption": "Etage (leer = keine)", "name": "LevelLabel", "width": "auto", "add": "", "edit": { "type": "ValidationTextBox" } }
+          ]
+        },
+        {
+          "type": "RowLayout",
+          "items": [
+            { "type": "ValidationTextBox", "name": "GenRoomPrefix", "caption": "Präfix (z. B. Büro)" },
+            { "type": "NumberSpinner", "name": "GenRoomStart", "caption": "von", "value": 1 },
+            { "type": "NumberSpinner", "name": "GenRoomEnd", "caption": "bis", "value": 1 },
+            { "type": "ValidationTextBox", "name": "GenRoomLevel", "caption": "für Etage (leer = keine)" },
+            { "type": "Button", "caption": "➕ Einfügen", "onClick": "echo STRUKT_AddRoomRows($id, $GenRooms, $GenRoomPrefix, $GenRoomStart, $GenRoomEnd, $GenRoomLevel);" }
+          ]
+        },
+        { "type": "Button", "caption": "🔍 Vorschau", "onClick": "echo STRUKT_PreviewSkeleton($id, $GenLevels, $GenRooms);" },
+        {
+          "type": "List",
+          "name": "GenPreview",
+          "caption": "Vorschau / Ergebnis",
+          "rowCount": 10,
+          "add": false,
+          "delete": false,
+          "loadValuesFromConfiguration": false,
+          "values": [],
+          "columns": [
+            { "caption": "Pfad", "name": "Pfad", "width": "300px", "add": "" },
+            { "caption": "Status", "name": "Status", "width": "120px", "add": "" }
+          ]
+        },
+        { "type": "CheckBox", "name": "GenConfirmed", "caption": "Ich habe die Vorschau geprüft" },
+        {
+          "type": "Button",
+          "caption": "🏗️ Jetzt anlegen",
+          "confirm": "Legt die oben gelistete Struktur wirklich in deinem Objektbaum an. Fortfahren?",
+          "onClick": "echo STRUKT_BuildSkeleton($id, $GenConfirmed, $GenLevels, $GenRooms);"
+        },
+        { "type": "Label", "name": "GenStatusLine", "caption": "ℹ️ Noch nichts angelegt." }
       ]
     },
     {

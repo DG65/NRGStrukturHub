@@ -34,6 +34,12 @@ class StrukturHub extends IPSModule
         // SUITE.md Store-Review Punkt 3) + IsLevel (die eigentliche Eingabe).
         $this->RegisterPropertyString('Levels', '[]');
 
+        // v0.2 Gerüst-Generator: Eingabe-/Planungszustand für Etagen/Räume,
+        // die noch angelegt werden sollen (kein Lesevertrag, keine
+        // Stabilitätsgarantie wie beim key in buildStructure() nötig).
+        $this->RegisterPropertyString('GenLevels', '[]'); // [{Label:string}]
+        $this->RegisterPropertyString('GenRooms', '[]');  // [{Label:string, LevelLabel:string}]
+
         $this->RegisterAttributeInteger('LastRefreshTs', 0);
 
         // Persistente Key-Zuordnung categoryID -> key (EIN gemeinsamer
@@ -182,6 +188,243 @@ class StrukturHub extends IPSModule
     }
 
     // -----------------------------------------------------------------
+    // v0.2 Gerüst-Generator — legt NUR Kategorien an (Etagen/Räume), keine
+    // Geräte-Instanzen/Links. Massen-Hilfe-Felder (Präfix/Start/Ende) haben
+    // bewusst keine eigene Property, sondern werden als Formularfeld-Namen
+    // direkt an den Button übergeben (Muster MeterHub VirtualPartners/
+    // VirtualRole) — Vorschau/Anlegen arbeiten auf der GERADE OFFENEN Maske,
+    // ein "Übernehmen" dazwischen ist nicht nötig.
+    // -----------------------------------------------------------------
+
+    public function AddLevelRows($rows, string $prefix, int $start, int $end): string
+    {
+        $prefix = trim($prefix);
+        if ($prefix === '') {
+            return '⛔ Bitte zuerst ein Präfix eintragen (z. B. "Etage").';
+        }
+        if ($start > $end) {
+            return '⛔ „von" muss kleiner oder gleich „bis" sein.';
+        }
+        if ($end - $start > 500) {
+            return '⛔ Maximal 500 Zeilen auf einmal — Bereich eingrenzen.';
+        }
+
+        $list = $this->normalizeFormList($rows);
+        for ($n = $start; $n <= $end; $n++) {
+            $list[] = ['Label' => $prefix . ' ' . $n];
+        }
+        $this->UpdateFormField('GenLevels', 'values', json_encode($list));
+
+        return '✅ ' . ($end - $start + 1) . ' Etagen-Zeile(n) eingefügt.';
+    }
+
+    public function AddRoomRows($rows, string $prefix, int $start, int $end, string $levelLabel): string
+    {
+        $prefix = trim($prefix);
+        if ($prefix === '') {
+            return '⛔ Bitte zuerst ein Präfix eintragen (z. B. "Büro").';
+        }
+        if ($start > $end) {
+            return '⛔ „von" muss kleiner oder gleich „bis" sein.';
+        }
+        if ($end - $start > 500) {
+            return '⛔ Maximal 500 Zeilen auf einmal — Bereich eingrenzen.';
+        }
+
+        $list = $this->normalizeFormList($rows);
+        for ($n = $start; $n <= $end; $n++) {
+            $list[] = ['Label' => $prefix . ' ' . $n, 'LevelLabel' => trim($levelLabel)];
+        }
+        $this->UpdateFormField('GenRooms', 'values', json_encode($list));
+
+        return '✅ ' . ($end - $start + 1) . ' Raum-Zeile(n) eingefügt.';
+    }
+
+    public function PreviewSkeleton($levelRows, $roomRows): string
+    {
+        $result = $this->planSkeleton($this->normalizeFormList($levelRows), $this->normalizeFormList($roomRows), true);
+        if ($result['error'] !== null) {
+            $this->UpdateFormField('GenPreview', 'values', json_encode([]));
+            return '⛔ ' . $result['error'];
+        }
+
+        $entries = array_merge($result['levelEntries'], $result['roomEntries']);
+        $this->UpdateFormField('GenPreview', 'values', json_encode($entries));
+
+        if (!$entries) {
+            return 'ℹ️ Nichts einzufügen — zuerst Etagen/Räume eintragen oder die Massen-Hilfe nutzen.';
+        }
+
+        return $this->skeletonSummary($result, 'Würde anlegen');
+    }
+
+    public function BuildSkeleton(bool $confirmed, $levelRows, $roomRows): string
+    {
+        if (!$confirmed) {
+            return '⛔ Bitte zuerst das Kästchen „Ich habe die Vorschau geprüft" bestätigen.';
+        }
+
+        $result = $this->planSkeleton($this->normalizeFormList($levelRows), $this->normalizeFormList($roomRows), false);
+        if ($result['error'] !== null) {
+            return '⛔ ' . $result['error'];
+        }
+
+        $entries = array_merge($result['levelEntries'], $result['roomEntries']);
+        $this->UpdateFormField('GenPreview', 'values', json_encode($entries));
+
+        // Komfort-Verzahnung mit v0.1: neu angelegte Etagen-Kategorien direkt
+        // in der bestehenden Levels-Tabelle vorhäkeln — NUR in der offenen
+        // Maske (UpdateFormField), keine Property-Selbstpersistenz (Store-
+        // Review Punkt 1). Der Nutzer bestätigt weiterhin selbst über das
+        // normale Formular-"Übernehmen".
+        if ($result['levelIDs']) {
+            $this->UpdateFormField('Levels', 'values', json_encode($this->buildLevelsRows($result['levelIDs'])));
+        }
+
+        $summary = $entries
+            ? $this->skeletonSummary($result, 'Angelegt')
+            : 'ℹ️ Nichts angelegt — keine Etagen/Räume eingetragen.';
+        $this->UpdateFormField('GenStatusLine', 'caption', $summary);
+
+        return $summary;
+    }
+
+    private function skeletonSummary(array $result, string $verb): string
+    {
+        $lc = count($result['levelEntries']);
+        $ln = count(array_filter($result['levelEntries'], fn($e) => $e['Status'] === 'neu'));
+        $rc = count($result['roomEntries']);
+        $rn = count(array_filter($result['roomEntries'], fn($e) => $e['Status'] === 'neu'));
+
+        $parts = [];
+        if ($lc > 0) {
+            $parts[] = "$lc Etage(n) ($ln neu)";
+        }
+        if ($rc > 0) {
+            $parts[] = "$rc Raum/Räume ($rn neu)";
+        }
+
+        return '✅ ' . $verb . ': ' . implode(', ', $parts) . '.';
+    }
+
+    private function planSkeleton(array $levelRows, array $roomRows, bool $dryRun): array
+    {
+        $root = $this->ReadPropertyInteger('RootCategoryID');
+        if ($root <= 0 || !IPS_ObjectExists($root)) {
+            return [
+                'error'        => 'Keine Wurzelkategorie konfiguriert — zuerst oben im Formular festlegen.',
+                'levelEntries' => [],
+                'roomEntries'  => [],
+                'levelIDs'     => [],
+            ];
+        }
+
+        $levelEntries   = [];
+        $levelIDByLabel = [];
+        $levelIDs       = [];
+        $pos            = 0;
+        foreach ($levelRows as $row) {
+            $label = trim((string) ($row['Label'] ?? ''));
+            if ($label === '') {
+                continue;
+            }
+            $ident      = 'strukt_' . $this->slugify($label, 'etage');
+            $existingID = $this->findChildByIdent($root, $ident);
+            $catID      = $dryRun ? $existingID : $this->ensureCategory($root, $ident, $label, $pos);
+            $status     = $existingID !== null ? 'vorhanden' : 'neu';
+
+            $levelEntries[] = ['Pfad' => $label, 'Status' => $status, 'CategoryID' => $catID];
+            $levelIDByLabel[mb_strtolower($label)] = $catID;
+            if ($catID !== null) {
+                $levelIDs[] = $catID;
+            }
+            $pos++;
+        }
+
+        $roomEntries = [];
+        $posByParent = [];
+        foreach ($roomRows as $row) {
+            $label = trim((string) ($row['Label'] ?? ''));
+            if ($label === '') {
+                continue;
+            }
+            $levelLabel = trim((string) ($row['LevelLabel'] ?? ''));
+            $parentID   = $levelLabel !== '' ? ($levelIDByLabel[mb_strtolower($levelLabel)] ?? null) : $root;
+            $pathPrefix = $levelLabel !== '' ? $levelLabel . ' / ' : '';
+
+            if ($parentID === null) {
+                // Zugehörige Etage existiert (noch) nicht (z. B. Vorschau vor
+                // der ersten echten Anlage) — Raum kann noch nicht real
+                // geprüft werden, gilt als "neu".
+                $roomEntries[] = ['Pfad' => $pathPrefix . $label, 'Status' => 'neu', 'CategoryID' => null];
+                continue;
+            }
+
+            $ident      = 'strukt_' . $this->slugify($label, 'raum');
+            $existingID = $this->findChildByIdent($parentID, $ident);
+            if ($dryRun) {
+                $catID = $existingID;
+            } else {
+                $roomPos = $posByParent[$parentID] ?? 0;
+                $catID   = $this->ensureCategory($parentID, $ident, $label, $roomPos);
+                $posByParent[$parentID] = $roomPos + 1;
+            }
+            $status = $existingID !== null ? 'vorhanden' : 'neu';
+
+            $roomEntries[] = ['Pfad' => $pathPrefix . $label, 'Status' => $status, 'CategoryID' => $catID];
+        }
+
+        return ['error' => null, 'levelEntries' => $levelEntries, 'roomEntries' => $roomEntries, 'levelIDs' => $levelIDs];
+    }
+
+    // Sucht ein direktes Kind mit gegebenem Ident (NICHT rekursiv — genau
+    // die Suchtiefe, die für "hat DIESER Parent dieses Kind schon" richtig
+    // ist). Bewusst manuell über IPS_GetChildrenIDs() statt
+    // IPS_GetObjectIDByIdent() (dessen Verhalten bei Nichtfund uneindeutig
+    // dokumentiert ist) — kein @-Unterdrücker vor einer IPS-API-Funktion,
+    // deren Erfolg wir auswerten (SUITE.md Stolperstein 13).
+    private function findChildByIdent(int $parentID, string $ident): ?int
+    {
+        if (!IPS_ObjectExists($parentID)) {
+            return null;
+        }
+        foreach (IPS_GetChildrenIDs($parentID) as $cid) {
+            if (IPS_GetObject($cid)['ObjectIdent'] === $ident) {
+                return $cid;
+            }
+        }
+        return null;
+    }
+
+    // Idempotent: legt nur an, wenn unter $parentID noch kein Kind mit
+    // diesem Ident existiert; Name wird bei jedem Aufruf neu gesetzt
+    // (Relabeling ohne Neuanlage), Position nur bei echter Neuanlage
+    // (Vorbild InverterHub/MeterHub EnsureCategory()).
+    private function ensureCategory(int $parentID, string $ident, string $name, int $position): int
+    {
+        $catID = $this->findChildByIdent($parentID, $ident);
+        if ($catID === null) {
+            $catID = IPS_CreateCategory();
+            IPS_SetParent($catID, $parentID);
+            IPS_SetIdent($catID, $ident);
+            IPS_SetPosition($catID, $position);
+        }
+        IPS_SetName($catID, $name);
+        return $catID;
+    }
+
+    // Formularfeld-Listen können als Array ODER als JSON-String hereinkommen
+    // (abhängig vom Aufrufkontext) — analog MigrationsHubs NormalizeFormList().
+    private function normalizeFormList($rows): array
+    {
+        if (is_string($rows)) {
+            $decoded = json_decode($rows, true);
+            return is_array($decoded) ? $decoded : [];
+        }
+        return is_array($rows) ? $rows : [];
+    }
+
+    // -----------------------------------------------------------------
     // GetConfigurationForm — live berechnete Felder (Levels-Auswahl,
     // Statuszeile, Vorschau-Liste), Basisgerüst aus form.json.
     // -----------------------------------------------------------------
@@ -242,10 +485,14 @@ class StrukturHub extends IPSModule
     // Auswahl (per CategoryID) aus der gespeicherten Property übernehmen,
     // Name/Anzahl-Spalten aber immer frisch anzeigen (Store-Review Punkt 3 —
     // berechnete Anzeigespalten nie aus der Konfiguration nachladen).
-    private function injectLevelsValues(array &$form): void
+    // $forceLevelIDs erzwingt IsLevel=true für bestimmte categoryIDs, unabhängig
+    // von der gespeicherten Auswahl — genutzt vom v0.2-Gerüst-Generator, um
+    // frisch angelegte Etagen-Kategorien direkt vorzuhäkeln.
+    private function buildLevelsRows(array $forceLevelIDs = []): array
     {
-        $root = $this->ReadPropertyInteger('RootCategoryID');
-        $prev = $this->levelFlags();
+        $root  = $this->ReadPropertyInteger('RootCategoryID');
+        $prev  = $this->levelFlags();
+        $force = array_flip($forceLevelIDs);
 
         $rows = [];
         if ($root > 0 && IPS_ObjectExists($root)) {
@@ -254,14 +501,19 @@ class StrukturHub extends IPSModule
                     continue;
                 }
                 $rows[] = [
-                    'IsLevel'    => $prev[$cid] ?? false,
+                    'IsLevel'    => isset($force[$cid]) ? true : ($prev[$cid] ?? false),
                     'CategoryID' => $cid,
                     'Name'       => IPS_GetName($cid),
                     'Kinder'     => count(IPS_GetChildrenIDs($cid)),
                 ];
             }
         }
+        return $rows;
+    }
 
+    private function injectLevelsValues(array &$form): void
+    {
+        $rows = $this->buildLevelsRows();
         foreach ($form['elements'] as &$el) {
             if (($el['name'] ?? '') === 'Levels') {
                 $el['values'] = $rows;
@@ -611,12 +863,7 @@ class StrukturHub extends IPSModule
     // [a-z0-9] reduzieren), innerhalb von $used eindeutig gemacht.
     private function uniqueKey(string $label, array &$used): string
     {
-        $slug = strtr(mb_strtolower($label), ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss']);
-        $slug = preg_replace('/[^a-z0-9]+/', '_', $slug);
-        $slug = trim($slug, '_');
-        if ($slug === '') {
-            $slug = 'raum';
-        }
+        $slug = $this->slugify($label, 'raum');
 
         $key = $slug;
         $n   = 2;
@@ -627,5 +874,16 @@ class StrukturHub extends IPSModule
         $used[] = $key;
 
         return $key;
+    }
+
+    // Deutscher Slug (Umlaute umschreiben, Rest auf [a-z0-9] reduzieren) —
+    // genutzt für den v0.1-Lesevertrag-Key (uniqueKey()) UND für die v0.2-
+    // Gerüst-Generator-Idents (planSkeleton()).
+    private function slugify(string $label, string $fallback): string
+    {
+        $slug = strtr(mb_strtolower($label), ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss']);
+        $slug = preg_replace('/[^a-z0-9]+/', '_', $slug);
+        $slug = trim($slug, '_');
+        return $slug === '' ? $fallback : $slug;
     }
 }
