@@ -202,9 +202,17 @@ class StrukturHub extends IPSModule
     // direkt an den Button übergeben (Muster MeterHub VirtualPartners/
     // VirtualRole) — Vorschau/Anlegen arbeiten auf der GERADE OFFENEN Maske,
     // ein "Übernehmen" dazwischen ist nicht nötig.
+    // WICHTIG: Listen-Parameter (rows/levelRows/roomRows) sind bewusst als
+    // "string" typisiert, NICHT als Array — der IPS-Kernel unterstützt für
+    // öffentliche PREFIX_-Funktionen nur bool/int/float/string (Live-Fund
+    // 28.08.2026: "hat keinen Datentyp oder einen nicht unterstützten
+    // Datentyp"-Warnung im Log bei ungetyptem/array-typisiertem Parameter).
+    // Aufrufer übergeben daher immer einen JSON-String (normalizeFormList()
+    // dekodiert ihn intern), analog zur GetStructure()-Konvention "Rückgabe
+    // ist JSON-String, kein Array" — hier gilt dasselbe für Eingabeparameter.
     // -----------------------------------------------------------------
 
-    public function AddLevelRows($rows, string $prefix, int $start, int $end, string $numberPos = 'hinten'): string
+    public function AddLevelRows(string $rows, string $prefix, int $start, int $end, string $numberPos = 'hinten'): string
     {
         $prefix = trim($prefix);
         if ($prefix === '') {
@@ -226,7 +234,7 @@ class StrukturHub extends IPSModule
         return '✅ ' . ($end - $start + 1) . ' Etagen-Zeile(n) eingefügt.';
     }
 
-    public function AddRoomRows($rows, string $prefix, int $start, int $end, string $levelLabel, string $numberPos = 'hinten'): string
+    public function AddRoomRows(string $rows, string $prefix, int $start, int $end, string $levelLabel, string $numberPos = 'hinten'): string
     {
         $prefix = trim($prefix);
         if ($prefix === '') {
@@ -256,7 +264,7 @@ class StrukturHub extends IPSModule
         return $numberPos === 'vorne' ? ($n . ' ' . $prefix) : ($prefix . ' ' . $n);
     }
 
-    public function PreviewSkeleton($levelRows, $roomRows): string
+    public function PreviewSkeleton(string $levelRows, string $roomRows): string
     {
         $result = $this->planSkeleton($this->normalizeFormList($levelRows), $this->normalizeFormList($roomRows), true);
         if ($result['error'] !== null) {
@@ -274,7 +282,7 @@ class StrukturHub extends IPSModule
         return $this->skeletonSummary($result, 'Würde anlegen');
     }
 
-    public function BuildSkeleton(bool $confirmed, $levelRows, $roomRows): string
+    public function BuildSkeleton(bool $confirmed, string $levelRows, string $roomRows): string
     {
         if (!$confirmed) {
             return '⛔ Bitte zuerst das Kästchen „Ich habe die Vorschau geprüft" bestätigen.';
