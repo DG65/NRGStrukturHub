@@ -3,13 +3,17 @@
     {
       "type": "ExpansionPanel",
       "name": "NewsPanel",
-      "caption": "🆕 Neu in Version 0.2.0",
+      "caption": "🆕 Neu in Version 0.3.0",
       "expanded": true,
       "visible": true,
       "items": [
         {
           "type": "Label",
-          "caption": "Neu: Gerüst-Generator (Panel „🏗️ Struktur-Gerüst anlegen“) — legt Etagen-/Raum-Kategorien nach der Verbund-Konvention an, auch in Masse per Präfix+Nummernbereich (privat wie gewerblich). Legt weiterhin keine Geräte-Verknüpfungen an."
+          "caption": "Neu: Formular-Tresor (Panel „🔒 Formular-Tresor aktivieren“) — versteckt dieses Formular optional hinter einem Passwort. Schützt nur vor Klicks in der Konsole, NICHT vor direktem Skript-/API-Zugriff — kein Ersatz für echte Zugriffskontrolle, nur eine Hürde gegen Mitbenutzer, die hier nicht herumklicken sollen."
+        },
+        {
+          "type": "Label",
+          "caption": "Seit 0.2.0: Gerüst-Generator (Panel „🏗️ Struktur-Gerüst anlegen“) — legt Etagen-/Raum-Kategorien nach der Verbund-Konvention an, auch in Masse per Präfix+Nummernbereich (privat wie gewerblich). Legt weiterhin keine Geräte-Verknüpfungen an."
         },
         {
           "type": "Label",
@@ -46,6 +50,10 @@
         {
           "type": "Label",
           "caption": "Gerüst-Generator (Panel weiter unten): Zeilen in „Etagen“/„Räume“ eintragen (frei benennbar — egal ob Etage/Stockwerk/Geschoss, Raum/Büro/Zimmer), bei Bedarf über Präfix+Nummernbereich viele Zeilen auf einmal einfügen. „Vorschau“ zeigt, was passieren würde, ohne etwas anzulegen. „Jetzt anlegen“ erzeugt die Kategorien wirklich — mehrfaches Anlegen mit denselben Zeilen legt nichts doppelt an. Legt KEINE Geräte-Verknüpfungen an, nur das Kategorie-Gerüst."
+        },
+        {
+          "type": "Label",
+          "caption": "Formular-Tresor (Panel „🔒 Formular-Tresor aktivieren“ oben): schützt dieses Formular optional mit einem Passwort — sinnvoll z. B. für Integratoren, deren Kunden ebenfalls Konsolen-Zugriff haben, aber nicht in dieser Instanz herumklicken sollen. WICHTIG: schützt nur vor Klicks im Formular, NICHT vor direktem Skript-/API-Zugriff auf die Konfiguration, und kennt nur ein Passwort, keine Nutzeridentität — jeder, der es kennt, hat Zugriff. Sperren wirkt erst ab dem nächsten Öffnen des Formulars. Andere Module können denselben Tresor optional über STRUKT_CheckVaultAccess() für ihr eigenes Formular nutzen."
         }
       ]
     },
