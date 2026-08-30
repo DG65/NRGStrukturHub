@@ -3,6 +3,17 @@
 Alle nennenswerten Änderungen an diesem Modul werden hier dokumentiert.
 Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [0.2.2] - 2026-08-30
+
+### Removed
+- **Formular-Tresor (kurzzeitig als 0.3.0 veröffentlicht) wieder entfernt.** Dietmars
+  Entscheidung nach Rückfrage: StrukturHub soll sich auf Objektbaum-Struktur konzentrieren,
+  Zugriffsschutz für Konfigurationsformulare bekommt ein eigenständiges, neues Modul statt hier
+  mitzulaufen — sauberer Schnitt statt zweier fachfremder Aufgaben in einem Modul. Reiner
+  Revert (Commit ae8b88f), keine Restspuren im Code. Der `STRUKT_GetStructure()`-Vertrag war
+  ohnehin nie betroffen (bewusst getrennt gebaut) — für MeterHub/Dashboard/EMS ändert sich
+  nichts.
+
 ## [0.2.1] - 2026-08-28
 
 ### Added
