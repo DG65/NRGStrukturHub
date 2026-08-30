@@ -1,7 +1,7 @@
 # StrukturHub
 
 ![Symcon](https://img.shields.io/badge/Symcon-PHPModul-blue)
-![Modul Version](https://img.shields.io/badge/Modul_Version-0.3.0-blue)
+![Modul Version](https://img.shields.io/badge/Modul_Version-0.2.1-blue)
 ![Symcon Version](https://img.shields.io/badge/Symcon_Version-9.0%2B-blue)
 ![License](https://img.shields.io/badge/License-PolyForm_Noncommercial_1.0.0-lightgrey)
 ![Check Style](https://github.com/DG65/NRGStrukturHub/actions/workflows/check-style.yml/badge.svg)
@@ -95,33 +95,6 @@ Mehrere StrukturHub-Instanzen sind ausdrücklich zulässig (z. B. Haupthaus + Ne
 getrennter Wurzelkategorie) — **keine Singleton-Annahme**. Konsumenten iterieren über ALLE
 Instanzen von `IPS_GetInstanceListByModuleID('{CA700334-0982-F356-0617-6952868137E9}')`, nicht
 nur die erste gefundene.
-
-## Formular-Tresor (v0.3, optional)
-
-Versteckt das Konfigurationsformular dieser Instanz hinter einem Passwort — Panel
-„🔒 Formular-Tresor aktivieren". Gedacht für Integrator-Szenarien: ein Kunde/Mitbenutzer hat
-ebenfalls Konsolen-Zugriff, soll aber nicht versehentlich in dieser Instanz herumklicken.
-
-**Wichtige Einschränkung, unbedingt beachten:** Das ist **kein echter Sicherheitsmechanismus**.
-Es schützt ausschließlich vor Klicks im Formular selbst — `IPS_GetConfiguration()`/
-`IPS_SetProperty()` sind Kernel-Aufrufe, die daran komplett vorbeigehen. Es kennt außerdem nur
-**ein Passwort, keine Nutzeridentität**: Symcons Konsole unterscheidet ohne die kostenpflichtige
-Enterprise-RBAC-Funktion nicht, WER gerade eingeloggt ist — jeder, der das Passwort kennt, hat
-Zugriff.
-
-- Passwort wird **gehasht** gespeichert (`password_hash()`), nie im Klartext.
-- Kein Auto-Timeout — bleibt entsperrt, bis „Jetzt sperren" geklickt wird. Sperren wirkt erst ab
-  dem **nächsten** Öffnen des Formulars, nicht rückwirkend auf eine bereits offene Maske (verwirft
-  sonst unbeachtete Eingaben in anderen Feldern, siehe SUITE.md).
-- Passwort liegt in einem Instanz-**Attribut**, nicht in einer Property — geht bei einem
-  erzwungenen Modul-Resync (`MC_DeleteModule()`+`MC_CreateModule()`) verloren. Der Tresor fällt
-  dann bewusst **offen** zurück (nie "gesperrt ohne bekanntes Passwort"), damit ein Resync
-  niemanden dauerhaft aussperrt — nach einem Resync ggf. neu setzen.
-- Andere Module können denselben Tresor für ihr **eigenes** Formular nutzen:
-  `STRUKT_CheckVaultAccess($id, $password): bool` — rein lesend, verändert nichts an dieser
-  Instanz, hinter `function_exists('STRUKT_CheckVaultAccess')` aufrufen. Ein Modul kann das
-  Formular eines anderen Moduls nicht von außen sperren — jedes Modul baut seine eigene
-  Sperr-UI selbst nach (Referenz: `lockedForm()`/`GetConfigurationForm()` in diesem Repo).
 
 ## Was StrukturHub NICHT tut (v0.1)
 

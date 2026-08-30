@@ -3,22 +3,6 @@
 Alle nennenswerten Änderungen an diesem Modul werden hier dokumentiert.
 Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
-## [0.3.0] - 2026-08-30
-
-### Added
-- Formular-Tresor (Panel „🔒 Formular-Tresor aktivieren"): optionaler Passwortschutz fürs
-  Konfigurationsformular dieser Instanz — Dietmars Integrator-Szenario (Kunde hat ebenfalls
-  Konsolen-Zugriff, soll aber nicht in dieser Instanz herumklicken können).
-  `STRUKT_UnlockVault`/`LockVaultNow`/`SetVaultPassword`/`CheckVaultAccess`. Passwort gehasht
-  (`password_hash()`), kein Klartext. Kein Auto-Timeout (Dietmars Entscheidung) — Sperren wirkt
-  erst ab dem nächsten Öffnen. Fail-open bei Attribut-Verlust (Modul-Resync), nie
-  gesperrt-ohne-Ausweg. `STRUKT_CheckVaultAccess()` als optionaler Vertrag für andere Module,
-  die denselben Tresor für ihr eigenes Formular nutzen wollen.
-- **Ausdrücklich KEIN echter Sicherheitsmechanismus** — schützt nur Formular-Klicks, nicht
-  direkten Skript-/API-Zugriff, kennt nur ein Passwort statt Nutzeridentität. Klar dokumentiert
-  in Formular, README, CLAUDE.md.
-- Bewusst getrennt vom `STRUKT_GetStructure()`-Vertrag — keine Berührung mit `buildStructure()`.
-
 ## [0.2.1] - 2026-08-28
 
 ### Added

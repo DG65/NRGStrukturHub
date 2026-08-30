@@ -43,10 +43,6 @@ getrennten Sitzungen gearbeitet:
    (nie `IPS_SetProperty`+`ApplyChanges` selbst), `vendor=""` (reines Software-Modul),
    `library.json` nur mit den erlaubten Schlüsseln, keine Emojis in `Translate()`-Strings,
    Klassenname = Modulname.
-9. **Formular-Tresor ist KEIN Sicherheitsmechanismus, das muss so bleiben.** Bei jeder
-   Erweiterung/Erwähnung ehrlich sagen: schützt nur Formular-Klicks in der Konsole, nicht
-   direkten Skript-/API-Zugriff, kennt nur ein Passwort, keine Nutzeridentität. Nie als "damit
-   ist es sicher" darstellen — siehe Roadmap-Abschnitt unten für den vollen Kontext.
 
 ## Eigenständigkeit prüfen: `.tools/check-standalone.php`
 
@@ -66,29 +62,6 @@ nachlesen, nicht Code zwischen Modulen vergleichen.
 ## Roadmap
 
 - **v0.1:** Read-only-Auskunft über bestehende Struktur. Live an Dietmars Anlage verifiziert.
-- **v0.3 (aktuell, nach v0.2):** Formular-Tresor — optionaler Passwortschutz fürs eigene
-  Konfigurationsformular (`UnlockVault`/`LockVaultNow`/`SetVaultPassword`/`CheckVaultAccess` in
-  `module.php`). Anlass: Dietmars Integrator-Szenario — ein Kunde bekommt ebenfalls
-  Konsolen-Zugriff und soll fremde Instanzen nicht versehentlich verändern können, teils auch
-  sensible Daten nicht auf den ersten Blick sehen. Symcon selbst bietet dafür nichts
-  Kostenloses auf Konsolen-Ebene (recherchiert 30.08.2026: die native RBAC-Funktion ist
-  kostenpflichtiges Enterprise-Feature UND laut eigener Doku WebFront-bezogen, nicht
-  Konsole). **Bewusst als eigenständige zweite Funktion gebaut, ohne jede Berührung mit
-  `buildStructure()`/`STRUKT_GetStructure()`** — der Raum-Vertrag ist bei MeterHub/Dashboard/
-  EMS bereits eingefroren, das sollte unangetastet bleiben. Plan/Recherche siehe
-  `~/.claude/plans/gentle-inventing-puddle.md`.
-  - **Kein echter Sicherheitsmechanismus, das ist an mehreren Stellen dokumentiert (Formular,
-    README, hier) und muss es bleiben, bei jeder Erweiterung erneut mitgeführt werden:**
-    schützt nur Formular-Klicks, nicht `IPS_GetConfiguration()`/`IPS_SetProperty()` per Skript;
-    kennt nur ein Passwort, keine Nutzeridentität.
-  - `VaultPasswordHash`/`VaultUnlocked` sind Attribute, nicht Properties (Verbund-Konvention
-    Zugangsdaten) — gehen bei einem `MC_DeleteModule()`+`MC_CreateModule()`-Resync verloren
-    (Stolperstein 5). Fail-open ist deshalb ein bewusstes Sicherheits-DESIGN, kein Bug: leerer
-    Hash → immer volles Formular, NIE "gesperrt ohne bekanntes Passwort".
-  - `ReloadForm()` nur in `UnlockVault()` (dort ist das Passwortfeld das einzige Feld im
-    ganzen Formular, unbedenklich). `LockVaultNow()`/`SetVaultPassword()` verzichten bewusst
-    darauf, weil sie aus dem VOLLEN Formular heraus geklickt werden, das anderswo (z. B.
-    `GenLevels`/`GenRooms`) gerade unbeachtete Eingaben haben könnte — SUITE.md Stolperstein 12.
 - **v0.2 (aktuell):** Gerüst-Generator — legt Etagen-/Raum-Kategorien nach Konvention an
   (`AddLevelRows`/`AddRoomRows`/`PreviewSkeleton`/`BuildSkeleton` in `module.php`, Panel
   „🏗️ Struktur-Gerüst anlegen" im Formular). Profitiert vom in v0.1 etablierten Vertrag (das

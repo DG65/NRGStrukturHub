@@ -62,16 +62,6 @@ class StrukturHub extends IPSModule
         // SUITE.md "Einheitliche Formular-Optik").
         $this->RegisterAttributeString('NewsAckVersion', '');
         $this->RegisterAttributeBoolean('ForumHintDismissed', false);
-
-        // v0.3 Formular-Tresor — eigenständig, KEINE Berührung mit dem
-        // STRUKT_GetStructure()-Vertrag. Bewusst Attribut statt Property
-        // (Verbund-Konvention Zugangsdaten) — Kaveat: MC_DeleteModule()+
-        // MC_CreateModule()-Resyncs löschen Attribute (SUITE.md
-        // Stolperstein 5). Fail-open per Design: leerer Hash bedeutet IMMER
-        // volles Formular, nie "gesperrt ohne bekanntes Passwort" — ein
-        // Resync sperrt Dietmar dadurch nie versehentlich aus.
-        $this->RegisterAttributeString('VaultPasswordHash', '');
-        $this->RegisterAttributeBoolean('VaultUnlocked', false);
     }
 
     public function ApplyChanges()
@@ -464,130 +454,12 @@ class StrukturHub extends IPSModule
     }
 
     // -----------------------------------------------------------------
-    // v0.3 Formular-Tresor — eigenständig, KEINE Berührung mit
-    // buildStructure()/STRUKT_GetStructure(). Schützt NUR Formular-Klicks
-    // in der Konsole, NICHT direkten Skript-/API-Zugriff auf die
-    // Konfiguration (IPS_GetConfiguration()/IPS_SetProperty() gehen daran
-    // komplett vorbei) — kein Ersatz für echte Zugriffskontrolle, nur eine
-    // Hürde gegen Mitbenutzer, die nicht in dieser Instanz herumklicken
-    // sollen (Dietmars Integrator/Kunde-Szenario, 30.08.2026).
-    // -----------------------------------------------------------------
-
-    public function UnlockVault(string $password): string
-    {
-        $hash = $this->ReadAttributeString('VaultPasswordHash');
-        if ($hash === '' || !password_verify($password, $hash)) {
-            return '⛔ Falsches Passwort.';
-        }
-        $this->WriteAttributeBoolean('VaultUnlocked', true);
-        // Im gesperrten Zustand ist das Passwortfeld das EINZIGE Feld im
-        // gesamten Formular — ReloadForm() ist hier unbedenklich (SUITE.md
-        // Stolperstein 12, "Faustregel": nur riskant, wenn ANDERE Felder
-        // gerade unbeachtete Eingaben haben könnten).
-        $this->ReloadForm();
-        return '✅ Entsperrt.';
-    }
-
-    public function LockVaultNow(): string
-    {
-        $this->WriteAttributeBoolean('VaultUnlocked', false);
-        // Bewusst KEIN ReloadForm(): wird aus dem VOLLEN Formular heraus
-        // geklickt, das z. B. in GenLevels/GenRooms gerade unbeachtete,
-        // noch nicht übernommene Eingaben haben könnte (SUITE.md
-        // Stolperstein 12, MeterHub-Kaveat gegen ReloadForm()). Die Sperre
-        // gilt deshalb erst ab dem nächsten Öffnen dieses Formulars, nicht
-        // rückwirkend auf die gerade offene Maske.
-        return 'ℹ️ Gesperrt — wirkt beim nächsten Öffnen dieses Formulars.';
-    }
-
-    public function SetVaultPassword(string $newPassword): string
-    {
-        if ($newPassword === '') {
-            $this->WriteAttributeString('VaultPasswordHash', '');
-            $this->WriteAttributeBoolean('VaultUnlocked', false);
-            return 'ℹ️ Formular-Tresor deaktiviert.';
-        }
-        $this->WriteAttributeString('VaultPasswordHash', password_hash($newPassword, PASSWORD_DEFAULT));
-        $this->WriteAttributeBoolean('VaultUnlocked', true);
-        return '✅ Passwort gesetzt.';
-    }
-
-    /**
-     * STRUKT_CheckVaultAccess($id, $password): bool
-     *
-     * Zustandsloser Vertrag für ANDERE Module, die denselben Tresor für ihr
-     * EIGENES Formular nutzen wollen (hinter function_exists()). Verändert
-     * NICHTS an dieser Instanz — kein Unlock hier, nur ein Passwort-
-     * Vergleich. Ein Modul kann das Formular eines anderen Moduls nicht von
-     * außen sperren; jedes Modul baut seine eigene Sperr-UI nach diesem
-     * Muster selbst nach (siehe GetConfigurationForm()/lockedForm() hier
-     * als Referenz).
-     *
-     * WICHTIG, wie beim gesamten Tresor: kein Ersatz für echte
-     * Zugriffskontrolle — nur ein Passwort, keine Nutzeridentität; jeder,
-     * der es kennt, hat Zugriff. Passwort niemals im Klartext loggen.
-     */
-    public function CheckVaultAccess(string $password): bool
-    {
-        $hash = $this->ReadAttributeString('VaultPasswordHash');
-        return $hash !== '' && password_verify($password, $hash);
-    }
-
-    private function lockedForm(): array
-    {
-        return [
-            'elements' => [
-                ['type' => 'Label', 'caption' => '🔒 Formular gesperrt — Passwort eingeben, um fortzufahren.'],
-                ['type' => 'PasswordTextBox', 'name' => 'VaultPasswordInput', 'caption' => 'Passwort'],
-                ['type' => 'Button', 'caption' => '🔓 Entsperren', 'onClick' => 'echo STRUKT_UnlockVault($id, $VaultPasswordInput);'],
-            ],
-        ];
-    }
-
-    private function vaultActivatePanel(): array
-    {
-        return [
-            'type'     => 'ExpansionPanel',
-            'caption'  => '🔒 Formular-Tresor aktivieren',
-            'expanded' => false,
-            'items'    => [
-                ['type' => 'Label', 'caption' => 'Versteckt dieses Formular hinter einem Passwort — schützt nur vor Klicks in der Konsole, NICHT vor direktem Skript-/API-Zugriff auf die Konfiguration. Sinnvoll z. B. wenn ein Kunde/Mitbenutzer ebenfalls Konsolen-Zugriff hat, aber nicht in dieser Instanz herumklicken soll.'],
-                ['type' => 'PasswordTextBox', 'name' => 'VaultNewPassword', 'caption' => 'Neues Passwort'],
-                ['type' => 'Button', 'caption' => 'Aktivieren', 'onClick' => 'echo STRUKT_SetVaultPassword($id, $VaultNewPassword);'],
-            ],
-        ];
-    }
-
-    private function vaultUnlockedPanel(): array
-    {
-        return [
-            'type'     => 'ExpansionPanel',
-            'caption'  => '🔒 Tresor',
-            'expanded' => false,
-            'items'    => [
-                ['type' => 'Label', 'caption' => 'Formular ist entsperrt.'],
-                ['type' => 'Button', 'caption' => 'Jetzt sperren', 'onClick' => 'echo STRUKT_LockVaultNow($id);'],
-                ['type' => 'Label', 'caption' => 'Passwort ändern (leer lassen zum Deaktivieren):'],
-                ['type' => 'PasswordTextBox', 'name' => 'VaultNewPassword', 'caption' => 'Neues Passwort'],
-                ['type' => 'Button', 'caption' => 'Übernehmen', 'onClick' => 'echo STRUKT_SetVaultPassword($id, $VaultNewPassword);'],
-            ],
-        ];
-    }
-
-    // -----------------------------------------------------------------
     // GetConfigurationForm — live berechnete Felder (Levels-Auswahl,
     // Statuszeile, Vorschau-Liste), Basisgerüst aus form.json.
     // -----------------------------------------------------------------
 
     public function GetConfigurationForm()
     {
-        $hasPassword = $this->ReadAttributeString('VaultPasswordHash') !== '';
-        $unlocked    = $this->ReadAttributeBoolean('VaultUnlocked');
-
-        if ($hasPassword && !$unlocked) {
-            return json_encode($this->lockedForm());
-        }
-
         $form = json_decode(file_get_contents(__DIR__ . '/form.json'), true);
 
         $this->injectVersionIntoDocPanel($form);
@@ -596,8 +468,6 @@ class StrukturHub extends IPSModule
         $this->injectLevelsValues($form);
         $this->injectStatusLine($form);
         $this->injectPreview($form);
-
-        array_unshift($form['elements'], $hasPassword ? $this->vaultUnlockedPanel() : $this->vaultActivatePanel());
 
         return json_encode($form);
     }
