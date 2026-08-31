@@ -52,11 +52,15 @@ php .tools/check-standalone.php    # 0 = sauber, 1 = ungesicherter Fremdaufruf
 
 Herkunft und Funktionsweise wie in den übrigen Hub-Repos — Prüflogik gleich halten.
 
-## Verbund-Manifest SUITE.md — Bezugsquelle
+## Verbund-Manifest SUITE.md — Bezugsquelle (geändert 31.08.2026)
 
-Primärquelle für alle Verbund-Konventionen ist `SUITE.md` im EMS-Repo
-(https://github.com/DG65/NRGEMS — während der EMS-Integrationsphase ist der Branch
-`ems-integration` der aktuellste Stand, nicht `main`). Bei Konventionsfragen zuerst dort
+SUITE.md liegt seit 31.08.2026 NICHT mehr in einem GitHub-Repo (die
+Modul-Repos sind öffentlich, SUITE.md enthält das komplette Architektur-/
+Debugging-Know-how des Verbunds — Dietmars Entscheidung). Primärquelle ist
+ausschließlich die lokale Datei `/Users/dietmar/Nextcloud/Claude/SUITE.md`
+auf Dietmars Maschine, versioniert in einem eigenen lokalen Git-Repo ohne
+Remote. Frühere Kopien wurden zusätzlich aus der Historie aller Modul-Repos
+entfernt (`git filter-repo` + Force-Push). Bei Konventionsfragen zuerst dort
 nachlesen, nicht Code zwischen Modulen vergleichen.
 
 ## Roadmap
