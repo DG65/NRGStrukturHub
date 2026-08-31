@@ -110,4 +110,4 @@ PolyForm Noncommercial 1.0.0, siehe [LICENSE](LICENSE). Spenden willkommen:
 ---
 
 Teil des **NRG-Stack** — welche Modulstände zusammenpassen, steht im
-[Kompatibilitäts-Manifest](https://github.com/DG65/NRGEMS/blob/main/SUITE.md).
+internen Kompatibilitäts-Manifest des NRG-Stack.

@@ -7,7 +7,7 @@ getrennten Sitzungen gearbeitet:
 
 - **StrukturHub** (dieses Repo): Objektbaum-Struktur maschinenlesbar machen —
   https://github.com/DG65/NRGStrukturHub
-- **EMS**: koordinierende Instanz, Verbund-Manifest (SUITE.md) — https://github.com/DG65/NRGEMS
+- **EMS**: koordinierende Instanz, Verbund-Manifest (lokale SUITE.md, siehe unten) — https://github.com/DG65/NRGEMS
 - **MeterHub**: erster geplanter Konsument (Raumzähler-Assistent: kaskadierte virtuelle
   Raumzähler gegen `STRUKT_GetStructure()`)
 - **NRGDashboard**: geplanter Konsument (Gruppierung nach Räumen/Etagen)
