@@ -34,7 +34,7 @@ class StrukturHub extends IPSModule
         // SUITE.md Store-Review Punkt 3) + IsLevel (die eigentliche Eingabe).
         $this->RegisterPropertyString('Levels', '[]');
 
-        // v0.2 Gerüst-Generator: Eingabe-/Planungszustand für Etagen/Räume,
+        // v0.2 Architekt: Eingabe-/Planungszustand für Etagen/Räume,
         // die noch angelegt werden sollen (kein Lesevertrag, keine
         // Stabilitätsgarantie wie beim key in buildStructure() nötig).
         $this->RegisterPropertyString('GenLevels', '[]'); // [{Label:string}]
@@ -99,7 +99,7 @@ class StrukturHub extends IPSModule
      * - "levels" ist leer, wenn keine Etagen-Ebene bestätigt wurde — "rooms[].level"
      *   ist dann ebenfalls "" (Räume liegen direkt unter der Wurzelkategorie).
      *   Existieren Etagen, kann "rooms[].level" TROTZDEM "" sein für Räume, die
-     *   der v0.2-Gerüst-Generator bewusst ohne Etagen-Zuordnung direkt unter
+     *   der v0.2-Architekt bewusst ohne Etagen-Zuordnung direkt unter
      *   der Wurzel angelegt hat (gemischte Struktur) — erkennbar am
      *   generator-eigenen Ident-Präfix, nicht jede unflagged Kategorie wird
      *   automatisch zum Raum (sonst kämen Gewerke-Kategorien wieder rein).
@@ -133,7 +133,7 @@ class StrukturHub extends IPSModule
      *   stehen ("101 Küche"/"Küche 101"), mit/ohne Trenner. String, nicht
      *   int (führende Nullen bleiben erhalten), "null" wenn keine Nummer
      *   erkennbar. Funktioniert für JEDE Kategorie, nicht nur über den
-     *   Gerüst-Generator erzeugte. Kein Fachwert — z. B. für Konsumenten
+     *   Architekt erzeugte. Kein Fachwert — z. B. für Konsumenten
      *   gedacht, die Geräte-Idents aus der Raumnummer ableiten wollen.
      * - "structureChangedAt" (Unix-Zeitstempel) ändert sich NUR, wenn sich
      *   levels/rooms inhaltlich seit dem letzten Aufruf tatsächlich geändert
@@ -201,7 +201,7 @@ class StrukturHub extends IPSModule
     }
 
     // -----------------------------------------------------------------
-    // v0.2 Gerüst-Generator — legt NUR Kategorien an (Etagen/Räume), keine
+    // v0.2 Architekt — legt NUR Kategorien an (Etagen/Räume), keine
     // Geräte-Instanzen/Links. Massen-Hilfe-Felder (Präfix/Start/Ende) haben
     // bewusst keine eigene Property, sondern werden als Formularfeld-Namen
     // direkt an den Button übergeben (Muster MeterHub VirtualPartners/
@@ -515,7 +515,7 @@ class StrukturHub extends IPSModule
     // Name/Anzahl-Spalten aber immer frisch anzeigen (Store-Review Punkt 3 —
     // berechnete Anzeigespalten nie aus der Konfiguration nachladen).
     // $forceLevelIDs erzwingt IsLevel=true für bestimmte categoryIDs, unabhängig
-    // von der gespeicherten Auswahl — genutzt vom v0.2-Gerüst-Generator, um
+    // von der gespeicherten Auswahl — genutzt vom v0.2-Architekt, um
     // frisch angelegte Etagen-Kategorien direkt vorzuhäkeln.
     private function buildLevelsRows(array $forceLevelIDs = []): array
     {
@@ -677,7 +677,7 @@ class StrukturHub extends IPSModule
                 }
             }
 
-            // Räume, die der v0.2-Gerüst-Generator BEWUSST ohne Etagen-
+            // Räume, die der v0.2-Architekt BEWUSST ohne Etagen-
             // Zuordnung direkt unter der Wurzel angelegt hat (auch wenn
             // andere Räume derselben Struktur Etagen haben) — Live-Fund
             // 29.08.2026: wurden bislang komplett übersehen, weil dieser
@@ -964,7 +964,7 @@ class StrukturHub extends IPSModule
 
     // Deutscher Slug (Umlaute umschreiben, Rest auf [a-z0-9] reduzieren) —
     // genutzt für den v0.1-Lesevertrag-Key (uniqueKey()) UND für die v0.2-
-    // Gerüst-Generator-Idents (planSkeleton()).
+    // Architekt-Idents (planSkeleton()).
     private function slugify(string $label, string $fallback): string
     {
         $slug = strtr(mb_strtolower($label), ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss']);

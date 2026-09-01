@@ -9,7 +9,7 @@
       "items": [
         {
           "type": "Label",
-          "caption": "Neu: Gerüst-Generator (Panel „🏗️ Struktur-Gerüst anlegen“) — legt Etagen-/Raum-Kategorien nach der Verbund-Konvention an, auch in Masse per Präfix+Nummernbereich (privat wie gewerblich). Legt weiterhin keine Geräte-Verknüpfungen an."
+          "caption": "Neu: der Architekt (Panel „🏗️ Architekt“) — legt Etagen-/Raum-Kategorien nach der Verbund-Konvention an, auch in Masse per Präfix+Nummernbereich (privat wie gewerblich). Legt weiterhin keine Geräte-Verknüpfungen an."
         },
         {
           "type": "Label",
@@ -45,7 +45,7 @@
         },
         {
           "type": "Label",
-          "caption": "Gerüst-Generator (Panel weiter unten): Zeilen in „Etagen“/„Räume“ eintragen (frei benennbar — egal ob Etage/Stockwerk/Geschoss, Raum/Büro/Zimmer), bei Bedarf über Präfix+Nummernbereich viele Zeilen auf einmal einfügen. „Vorschau“ zeigt, was passieren würde, ohne etwas anzulegen. „Jetzt anlegen“ erzeugt die Kategorien wirklich — mehrfaches Anlegen mit denselben Zeilen legt nichts doppelt an. Legt KEINE Geräte-Verknüpfungen an, nur das Kategorie-Gerüst."
+          "caption": "Architekt (Panel weiter unten): Zeilen in „Etagen“/„Räume“ eintragen (frei benennbar — egal ob Etage/Stockwerk/Geschoss, Raum/Büro/Zimmer), bei Bedarf über Präfix+Nummernbereich viele Zeilen auf einmal einfügen. „Vorschau“ zeigt, was passieren würde, ohne etwas anzulegen. „Jetzt anlegen“ erzeugt die Kategorien wirklich — mehrfaches Anlegen mit denselben Zeilen legt nichts doppelt an. Legt KEINE Geräte-Verknüpfungen an, nur das Kategorie-Gerüst."
         }
       ]
     },
@@ -127,7 +127,7 @@
     },
     {
       "type": "ExpansionPanel",
-      "caption": "🏗️ Struktur-Gerüst anlegen",
+      "caption": "🏗️ Architekt",
       "expanded": false,
       "items": [
         {
