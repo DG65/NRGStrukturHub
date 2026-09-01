@@ -20,8 +20,8 @@ Heuristiken zu bauen.
   seine Struktur liegt (Wurzelkategorie der Räume, welche Unterkategorien Etagen sind).
   StrukturHub liefert das als Vertrag. Legt nichts an, baut nichts um — gefahrlos
   installierbar.
-- **v0.2 (dieses Release) — der Architekt.** Legt Etagen-/Raum-Kategorien nach der
-  Verbund-Konvention an — Panel „🏗️ Architekt" im Formular. Alle Begriffe frei
+- **v0.2 (dieses Release) — der Baumeister.** Legt Etagen-/Raum-Kategorien nach der
+  Verbund-Konvention an — Panel „🏗️ Baumeister" im Formular. Alle Begriffe frei
   wählbar (Etage/Stockwerk/Geschoss, Raum/Büro/Zimmer), per Präfix+Nummernbereich auch in
   Masse (privat wie gewerblich), Nummer wahlweise vor oder nach dem Namen ("101 Büro" /
   "Büro 101"). Legt ausschließlich Kategorien an — **keine** Geräte-Instanzen/Links (die
@@ -79,7 +79,7 @@ Rückgabe ist ein **JSON-STRING** (kein PHP-Array) — beim Aufrufer
   Best-Effort-Ableitung** einer Geschoss-/Raumnummer aus dem Namen — die Zahl darf vor oder
   nach dem Namen stehen ("101 Küche"/"Küche 101"), mit oder ohne Trenner. **String, nicht
   Zahl** (führende Nullen bleiben erhalten), `null` wenn keine Nummer erkennbar. Funktioniert
-  für jede Kategorie, nicht nur über den Architekten erzeugte — gedacht z. B. für
+  für jede Kategorie, nicht nur über den Baumeister erzeugte — gedacht z. B. für
   Konsumenten, die Geräte-Idents aus der Raumnummer ableiten wollen.
 - `structureChangedAt` ändert sich **nur**, wenn sich `levels`/`rooms` inhaltlich seit dem
   letzten Aufruf tatsächlich geändert haben (interner Hash-Vergleich) — Konsumenten können

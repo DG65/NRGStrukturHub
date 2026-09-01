@@ -15,7 +15,7 @@ getrennten Sitzungen gearbeitet:
 ## Rolle und Grundregeln
 
 1. **Reine Auskunft, kein Regler.** StrukturHub liest die bestehende Struktur und publiziert
-   sie über `STRUKT_GetStructure`. v0.1 legt nichts an, ändert nichts — v0.2 (der Architekt)
+   sie über `STRUKT_GetStructure`. v0.1 legt nichts an, ändert nichts — v0.2 (der Baumeister)
    ist ein separater, späterer Schritt.
 2. **Eigenständigkeit.** StrukturHub setzt kein anderes Modul voraus und wird selbst von
    keinem vorausgesetzt — jeder Fremdaufruf (sollte in v0.2+ nötig werden) hinter
@@ -66,9 +66,9 @@ nachlesen, nicht Code zwischen Modulen vergleichen.
 ## Roadmap
 
 - **v0.1:** Read-only-Auskunft über bestehende Struktur. Live an Dietmars Anlage verifiziert.
-- **v0.2 (aktuell):** der Architekt — legt Etagen-/Raum-Kategorien nach Konvention an
+- **v0.2 (aktuell):** der Baumeister — legt Etagen-/Raum-Kategorien nach Konvention an
   (`AddLevelRows`/`AddRoomRows`/`PreviewSkeleton`/`BuildSkeleton` in `module.php`, Panel
-  „🏗️ Architekt" im Formular). Profitiert vom in v0.1 etablierten Vertrag (das
+  „🏗️ Baumeister" im Formular). Profitiert vom in v0.1 etablierten Vertrag (das
   Erzeugte ist per Definition vertragskonform — v0.1 liest die neuen Kategorien ohne Änderung
   korrekt ein).
 
