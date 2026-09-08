@@ -6,6 +6,18 @@ Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 ## [0.4.2] - 2026-09-09
 
 ### Added
+- `extractNumber()`/`numberPosition()` erkennen jetzt **zusammengesetzte
+  Geschoss.Raum-Nummern** ("1.11 Büro" = Geschoss 1, Raum 11) als EINE Einheit statt nur die
+  Ziffern vor dem Punkt zu erfassen — verbreitete Raumnummerierungs-Konvention bei
+  öffentlichen Gebäuden/Institutionen (Hochschulen, Verwaltungsgebäude), von Dietmar
+  eingebracht, per Internetrecherche bestätigt (u. a. PH Ludwigsburg: Raumnummer "1.016" =
+  Gebäude 1, Stockwerk 0, Raum 16). Bisher hätte `extractNumber("1.11 Büro")` fälschlich nur
+  `"1"` geliefert (die "11" ging verloren), `numberPosition()` behandelte ein reines "1.11"
+  ohne Namenszusatz zusätzlich fälschlich als "hinten" statt als reinen Nummern-Fall ohne
+  Position (analog zu "101" pur). Wirkt sich auf den `number`-Wert im
+  `STRUKT_GetStructure()`-Vertrag UND auf die Standesamt-Zahlenposition-Konsistenzprüfung aus.
+  Reine Erkennungs-Erweiterung — der Baumeister generiert solche zusammengesetzten Nummern
+  (noch) nicht selbst, das war nicht Teil dieser Änderung.
 - Baumeister-Massen-Hilfe: dritte Option bei „Nummer" — **„vorne mit Punkt"** (z. B. "1.
   Obergeschoss", "100. Obergeschoss") zusätzlich zu den bisherigen "hinten"/"vorne"
   (Live-Rückmeldung Dietmar: die bisherigen zwei Optionen deckten die übliche deutsche

@@ -9,6 +9,10 @@
       "items": [
         {
           "type": "Label",
+          "caption": "Erkennt jetzt auch zusammengesetzte Geschoss.Raum-Nummern („1.11 Büro“ = Geschoss 1, Raum 11) — verbreitet bei öffentlichen Gebäuden/Institutionen. Wirkt sich auf das number-Feld im Vertrag und die Standesamt-Zahlenpositionsprüfung aus."
+        },
+        {
+          "type": "Label",
           "caption": "Baumeister: neue Option „vorne mit Punkt“ bei „Nummer“ (z. B. „1. Obergeschoss“) zusätzlich zu „hinten“/„vorne“ — gilt für Etagen und Räume gleichermaßen."
         },
         {

@@ -877,6 +877,13 @@ class Katasteramt extends IPSModule
     // Kategorie über den v0.2-Generator oder manuell entstanden ist. Rein
     // numerische Namen ("101") zuerst behandeln, sonst würde die
     // Nachgestellt-Regel sie fälschlich in z. B. "10"+"1" zerlegen.
+    //
+    // Zusammengesetzte Geschoss.Raum-Nummer ("1.11 Büro" = Geschoss 1, Raum
+    // 11) — verbreitete Konvention bei öffentlichen Gebäuden/Institutionen
+    // (z. B. Hochschulen, Verwaltungsgebäude, siehe CLAUDE.md-Recherche
+    // 09.09.2026), MUSS vor den einfachen Ziffernfolgen-Regeln geprüft
+    // werden: sonst würde die "vorne"-Regel bei "1.11 Büro" nur die "1" vor
+    // dem Punkt greifen und die eigentliche Raumnummer "11" verlieren.
     private function extractNumber(string $label): ?string
     {
         $label = trim($label);
@@ -885,6 +892,17 @@ class Katasteramt extends IPSModule
         }
         if (preg_match('/^\d+$/', $label)) {
             return $label;
+        }
+        if (preg_match('/^\d+\.\d+$/', $label)) {
+            return $label;
+        }
+        // Vorangestellte zusammengesetzte Nummer ("1.11 Büro").
+        if (preg_match('/^(\d+\.\d+)(?=\D)/', $label, $m)) {
+            return $m[1];
+        }
+        // Nachgestellte zusammengesetzte Nummer ("Büro 1.11").
+        if (preg_match('/(?<=\D)(\d+\.\d+)$/', $label, $m)) {
+            return $m[1];
         }
         // Nachgestellte Nummer zuerst prüfen (Standard-Konvention "Name 101").
         if (preg_match('/(\d+)$/', $label, $m)) {
@@ -1068,7 +1086,7 @@ class Katasteramt extends IPSModule
     private function numberPosition(string $label): ?string
     {
         $label = trim($label);
-        if ($label === '' || preg_match('/^\d+$/', $label)) {
+        if ($label === '' || preg_match('/^\d+$/', $label) || preg_match('/^\d+\.\d+$/', $label)) {
             return null;
         }
         if (preg_match('/\d+$/', $label)) {
