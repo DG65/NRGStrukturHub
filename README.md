@@ -109,5 +109,8 @@ PolyForm Noncommercial 1.0.0, siehe [LICENSE](LICENSE). Spenden willkommen:
 
 ---
 
-Teil des **NRG-Stack** — welche Modulstände zusammenpassen, steht im
-internen Kompatibilitäts-Manifest des NRG-Stack.
+Teil des **DG65 Toolkit** — eigenständige, domänenfreie Symcon-Bausteine von DG65, ohne
+Energiebezug (Gründungspaar: [GleitenderMittelwert](https://github.com/DG65/NRGGleitenderMittelwert),
+StrukturHub). Kein NRG-Stack-Modul, auch wenn erste Konsumenten des `STRUKT_GetStructure()`-
+Vertrags (MeterHub, Dashboard, EMS) aus NRG-Stack kommen — das ist Reihenfolge, keine
+fachliche Zugehörigkeit.
