@@ -9,6 +9,10 @@
       "items": [
         {
           "type": "Label",
+          "caption": "Baumeister bei Räumen: neue Nummer-Option „Geschoss.Raum“ — erzeugt aus der zugeordneten Etage automatisch „1.01“ bis „1.20“ (Präfix optional, Ziffernbreite passt sich dem Bereich an)."
+        },
+        {
+          "type": "Label",
           "caption": "Erkennt jetzt auch zusammengesetzte Geschoss.Raum-Nummern („1.11 Büro“ = Geschoss 1, Raum 11) — verbreitet bei öffentlichen Gebäuden/Institutionen. Wirkt sich auf das number-Feld im Vertrag und die Standesamt-Zahlenpositionsprüfung aus."
         },
         {
@@ -219,7 +223,8 @@
               "options": [
                 { "caption": "hinten (Büro 101)", "value": "hinten" },
                 { "caption": "vorne (101 Büro)", "value": "vorne" },
-                { "caption": "vorne mit Punkt (1. Büro)", "value": "vorne_punkt" }
+                { "caption": "vorne mit Punkt (1. Büro)", "value": "vorne_punkt" },
+                { "caption": "Geschoss.Raum (1.01, Präfix optional)", "value": "etage_raum" }
               ]
             },
             { "type": "ValidationTextBox", "name": "GenRoomLevel", "caption": "für Etage (leer = keine)" },

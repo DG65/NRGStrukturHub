@@ -254,8 +254,14 @@ class Katasteramt extends IPSModule
 
     public function AddRoomRows(mixed $rows, string $prefix, int $start, int $end, string $levelLabel, string $numberPos = 'hinten'): string
     {
-        $prefix = trim($prefix);
-        if ($prefix === '') {
+        $prefix    = trim($prefix);
+        $levelLabel = trim($levelLabel);
+
+        // "etage_raum" braucht KEIN Präfix (die zusammengesetzte Nummer trägt
+        // die Bedeutung bereits selbst, z. B. "1.01" ohne weiteren Namen,
+        // siehe composeEtageRaumLabel()) — bei allen anderen Modi bleibt das
+        // Präfix wie bisher Pflicht.
+        if ($prefix === '' && $numberPos !== 'etage_raum') {
             return '⛔ Bitte zuerst ein Präfix eintragen (z. B. "Büro").';
         }
         if ($start > $end) {
@@ -265,9 +271,24 @@ class Katasteramt extends IPSModule
             return '⛔ Maximal 500 Zeilen auf einmal — Bereich eingrenzen.';
         }
 
-        $list = $this->normalizeFormList($rows);
+        $floorNumber = null;
+        if ($numberPos === 'etage_raum') {
+            if ($levelLabel === '') {
+                return '⛔ Für „Geschoss.Raum“ muss oben eine Etage angegeben werden.';
+            }
+            $floorNumber = $this->extractNumber($levelLabel);
+            if ($floorNumber === null) {
+                return '⛔ Aus der Etage „' . $levelLabel . '“ konnte keine Nummer abgeleitet werden (z. B. „Etage 1“ oder „1. Obergeschoss“).';
+            }
+        }
+
+        $list  = $this->normalizeFormList($rows);
+        $width = strlen((string) $end);
         for ($n = $start; $n <= $end; $n++) {
-            $list[] = ['Label' => $this->composeGeneratedLabel($prefix, $n, $numberPos), 'LevelLabel' => trim($levelLabel)];
+            $label = $numberPos === 'etage_raum'
+                ? $this->composeEtageRaumLabel($floorNumber, $n, $width, $prefix)
+                : $this->composeGeneratedLabel($prefix, $n, $numberPos);
+            $list[] = ['Label' => $label, 'LevelLabel' => $levelLabel];
         }
         $this->UpdateFormField('GenRooms', 'values', json_encode($list));
 
@@ -289,6 +310,24 @@ class Katasteramt extends IPSModule
             'vorne'       => $n . ' ' . $prefix,
             default       => $prefix . ' ' . $n,
         };
+    }
+
+    // Zusammengesetzte Geschoss.Raum-Nummer ("1.01" … "1.20"), siehe
+    // extractNumber()-Erweiterung vom 09.09.2026 — verbreitete Konvention bei
+    // öffentlichen Gebäuden/Institutionen (Dietmar-Wunsch 09.09.2026). Nur für
+    // Räume sinnvoll (braucht eine zugehörige Etage), NICHT Teil von
+    // composeGeneratedLabel(), das auch für Etagen selbst genutzt wird, die
+    // keine "eigene" übergeordnete Geschossnummer haben. Raumnummer-Teil wird
+    // auf die Ziffernbreite von "bis" gepolstert (z. B. bei 1–20: "01".."20"),
+    // damit die Nummern innerhalb einer Etage gleich lang bleiben — bei
+    // größeren Bereichen (z. B. 1–150) entsprechend breiter, nie fest auf 2
+    // Stellen verdrahtet. Präfix ist hier bewusst optional: die Nummer allein
+    // ("1.01") ist bei dieser Konvention oft schon die vollständige, offizielle
+    // Raumbezeichnung, ein Name ist nur ein optionaler Zusatz ("1.01 Büro").
+    private function composeEtageRaumLabel(string $floorNumber, int $n, int $width, string $prefix): string
+    {
+        $composite = $floorNumber . '.' . str_pad((string) $n, $width, '0', STR_PAD_LEFT);
+        return $prefix === '' ? $composite : $composite . ' ' . $prefix;
     }
 
     public function PreviewSkeleton(mixed $levelRows, mixed $roomRows): string

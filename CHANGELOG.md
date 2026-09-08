@@ -6,6 +6,15 @@ Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 ## [0.4.2] - 2026-09-09
 
 ### Added
+- Baumeister-Massen-Hilfe für Räume: vierte Nummer-Option **„Geschoss.Raum"** — erzeugt
+  zusammengesetzte Nummern automatisch aus der zugeordneten Etage (z. B. Etage „Etage 1" +
+  Raumbereich 1–20 → „1.01" bis „1.20"). Die Etagen-Nummer wird per `extractNumber()` aus dem
+  Etagen-Label abgeleitet (funktioniert mit "Etage 1", "1. Obergeschoss" usw.), die
+  Raumnummer automatisch auf die Ziffernbreite von „bis" gepolstert (bei 1–150 also 3-stellig:
+  „2.007"…„2.150", nicht fest auf 2 Stellen verdrahtet). Präfix ist bei diesem Modus bewusst
+  optional — die Nummer allein ("1.01") ist bei dieser Konvention oft schon die vollständige
+  Raumbezeichnung. Ergänzt die im selben Release neu hinzugekommene Erkennung
+  zusammengesetzter Nummern (siehe unten) um die passende Erzeugungs-Seite.
 - `extractNumber()`/`numberPosition()` erkennen jetzt **zusammengesetzte
   Geschoss.Raum-Nummern** ("1.11 Büro" = Geschoss 1, Raum 11) als EINE Einheit statt nur die
   Ziffern vor dem Punkt zu erfassen — verbreitete Raumnummerierungs-Konvention bei
@@ -16,8 +25,8 @@ Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
   ohne Namenszusatz zusätzlich fälschlich als "hinten" statt als reinen Nummern-Fall ohne
   Position (analog zu "101" pur). Wirkt sich auf den `number`-Wert im
   `STRUKT_GetStructure()`-Vertrag UND auf die Standesamt-Zahlenposition-Konsistenzprüfung aus.
-  Reine Erkennungs-Erweiterung — der Baumeister generiert solche zusammengesetzten Nummern
-  (noch) nicht selbst, das war nicht Teil dieser Änderung.
+  Die passende Erzeugungs-Seite (Baumeister-Option „Geschoss.Raum") liefert dieses Release
+  gleich mit, siehe oben.
 - Baumeister-Massen-Hilfe: dritte Option bei „Nummer" — **„vorne mit Punkt"** (z. B. "1.
   Obergeschoss", "100. Obergeschoss") zusätzlich zu den bisherigen "hinten"/"vorne"
   (Live-Rückmeldung Dietmar: die bisherigen zwei Optionen deckten die übliche deutsche
