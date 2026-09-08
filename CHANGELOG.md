@@ -3,6 +3,26 @@
 Alle nennenswerten Änderungen an diesem Modul werden hier dokumentiert.
 Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [0.4.2] - 2026-09-09
+
+### Fixed
+- **Fatal Error beim Baumeister-Button „➕ Einfügen" und beim Standesamt-Button „✅ Ausgewählte
+  übernehmen"** (Live-Fund von Dietmar über die echte Konsole, nicht durch `php_eval`-Tests
+  reproduzierbar): `Uncaught TypeError: Katasteramt::AddLevelRows(): Argument #1 ($rows) must
+  be of type string, IPSList given`. Ursache: Wird ein List-Formularfeld im `onClick` direkt
+  per Feldname referenziert (z. B. `$GenLevels` in
+  `STRUKT_AddLevelRows($id, $GenLevels, ...)`), übergibt der IPS-Kernel zur Laufzeit ein
+  `IPSList`-Objekt, keinen JSON-String — die bisherige `string`-Typisierung (Fix vom
+  28.08.2026 gegen "hat keinen Datentyp"-Warnungen) war dafür zu eng. Betroffene Parameter
+  (`AddLevelRows`/`AddRoomRows`/`PreviewSkeleton`/`BuildSkeleton`/`ApplyNamingFixes`) jetzt als
+  `mixed` typisiert — analog zu Symcons eigenem EnergyManager-Modul
+  (`UIUpdateNameAndStatus(mixed $Values, ...)`, dort mit demselben Grund kommentiert).
+  `normalizeFormList()` verarbeitet jetzt JSON-String, PHP-Array UND `IPSList`/`Traversable`
+  gleichermaßen. Betraf nur den Formular-Button-Aufruf — `STRUKT_GetStructure()` und alle
+  bisherigen `php_eval`-Live-Tests (die immer einen fertigen JSON-String übergaben) waren nie
+  betroffen, weshalb der Fehler bei der Verifikation nach der Symcon-Neuinstallation zunächst
+  unentdeckt blieb.
+
 ## [0.4.1] - 2026-09-09
 
 ### Changed

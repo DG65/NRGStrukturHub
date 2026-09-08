@@ -209,17 +209,28 @@ class Katasteramt extends IPSModule
     // direkt an den Button übergeben (Muster MeterHub VirtualPartners/
     // VirtualRole) — Vorschau/Anlegen arbeiten auf der GERADE OFFENEN Maske,
     // ein "Übernehmen" dazwischen ist nicht nötig.
-    // WICHTIG: Listen-Parameter (rows/levelRows/roomRows) sind bewusst als
-    // "string" typisiert, NICHT als Array — der IPS-Kernel unterstützt für
-    // öffentliche PREFIX_-Funktionen nur bool/int/float/string (Live-Fund
-    // 28.08.2026: "hat keinen Datentyp oder einen nicht unterstützten
-    // Datentyp"-Warnung im Log bei ungetyptem/array-typisiertem Parameter).
-    // Aufrufer übergeben daher immer einen JSON-String (normalizeFormList()
-    // dekodiert ihn intern), analog zur GetStructure()-Konvention "Rückgabe
-    // ist JSON-String, kein Array" — hier gilt dasselbe für Eingabeparameter.
+    // WICHTIG: Listen-Parameter (rows/levelRows/roomRows/findings) sind
+    // bewusst als "mixed" typisiert, NICHT als "string" (Live-Fund
+    // 09.09.2026, siehe CHANGELOG 0.4.2): Wird ein List-Feld im onClick
+    // direkt per Feldname referenziert (z. B. "$GenLevels" in
+    // AddLevelRows($id, $GenLevels, ...)), übergibt der IPS-Kernel zur
+    // Laufzeit ein "IPSList"-Objekt, KEINEN JSON-String — ein "string"-
+    // Parameter löst dabei einen Fatal Error (TypeError) aus. Genau dasselbe
+    // Muster nutzt Symcons eigenes EnergyManager-Modul
+    // (UIUpdateNameAndStatus(mixed $Values, ...) mit dem Kommentar "$Values
+    // is IPSList, which is not known by php validation methods, so we just
+    // set type to mixed"). normalizeFormList() akzeptiert deshalb sowohl
+    // einen JSON-String (Aufruf per php_eval/Skript) als auch ein iterierbares
+    // IPSList-Objekt (Aufruf per Formular-Button) — ein IPSList-Objekt selbst
+    // verhält sich beim Durchlaufen wie eine Liste assoziativer Arrays
+    // (`foreach ($rows as $row) { $row['Label'] ... }` funktioniert direkt).
+    // (Frühere Begründung, 28.08.2026, war unvollständig: "hat keinen
+    // Datentyp"-Warnungen bei UNGETYPTEN Parametern gab es tatsächlich, aber
+    // die Lösung "string" war zu eng — "mixed" vermeidet die Warnung
+    // genauso und akzeptiert zusätzlich den echten Laufzeit-Typ.)
     // -----------------------------------------------------------------
 
-    public function AddLevelRows(string $rows, string $prefix, int $start, int $end, string $numberPos = 'hinten'): string
+    public function AddLevelRows(mixed $rows, string $prefix, int $start, int $end, string $numberPos = 'hinten'): string
     {
         $prefix = trim($prefix);
         if ($prefix === '') {
@@ -241,7 +252,7 @@ class Katasteramt extends IPSModule
         return '✅ ' . ($end - $start + 1) . ' Etagen-Zeile(n) eingefügt.';
     }
 
-    public function AddRoomRows(string $rows, string $prefix, int $start, int $end, string $levelLabel, string $numberPos = 'hinten'): string
+    public function AddRoomRows(mixed $rows, string $prefix, int $start, int $end, string $levelLabel, string $numberPos = 'hinten'): string
     {
         $prefix = trim($prefix);
         if ($prefix === '') {
@@ -271,7 +282,7 @@ class Katasteramt extends IPSModule
         return $numberPos === 'vorne' ? ($n . ' ' . $prefix) : ($prefix . ' ' . $n);
     }
 
-    public function PreviewSkeleton(string $levelRows, string $roomRows): string
+    public function PreviewSkeleton(mixed $levelRows, mixed $roomRows): string
     {
         $result = $this->planSkeleton($this->normalizeFormList($levelRows), $this->normalizeFormList($roomRows), true);
         if ($result['error'] !== null) {
@@ -289,7 +300,7 @@ class Katasteramt extends IPSModule
         return $this->skeletonSummary($result, 'Würde anlegen');
     }
 
-    public function BuildSkeleton(bool $confirmed, string $levelRows, string $roomRows): string
+    public function BuildSkeleton(bool $confirmed, mixed $levelRows, mixed $roomRows): string
     {
         if (!$confirmed) {
             return '⛔ Bitte zuerst das Kästchen „Ich habe die Vorschau geprüft" bestätigen.';
@@ -446,13 +457,27 @@ class Katasteramt extends IPSModule
 
     // Formularfeld-Listen können als Array ODER als JSON-String hereinkommen
     // (abhängig vom Aufrufkontext) — analog MigrationsHubs NormalizeFormList().
-    private function normalizeFormList($rows): array
+    private function normalizeFormList(mixed $rows): array
     {
         if (is_string($rows)) {
             $decoded = json_decode($rows, true);
             return is_array($decoded) ? $decoded : [];
         }
-        return is_array($rows) ? $rows : [];
+        if (is_array($rows)) {
+            return $rows;
+        }
+        if ($rows instanceof \Traversable) {
+            // List-Feld direkt per Formularfeld-Namen referenziert
+            // (z. B. "$GenLevels" im onClick) — der IPS-Kernel übergibt dann
+            // ein IPSList-Objekt statt eines JSON-Strings, siehe Kommentar
+            // oberhalb der Baumeister-Methoden.
+            $out = [];
+            foreach ($rows as $row) {
+                $out[] = is_array($row) ? $row : (array) $row;
+            }
+            return $out;
+        }
+        return [];
     }
 
     // -----------------------------------------------------------------
@@ -939,10 +964,10 @@ class Katasteramt extends IPSModule
         return $status;
     }
 
-    public function ApplyNamingFixes(string $findings): string
+    public function ApplyNamingFixes(mixed $findings): string
     {
-        $rows = json_decode($findings, true);
-        if (!is_array($rows)) {
+        $rows = $this->normalizeFormList($findings);
+        if (!$rows) {
             return '⛔ Keine gültigen Daten übergeben.';
         }
 

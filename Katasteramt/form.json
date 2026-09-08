@@ -3,13 +3,17 @@
     {
       "type": "ExpansionPanel",
       "name": "NewsPanel",
-      "caption": "🆕 Neu in Version 0.4.0",
+      "caption": "🆕 Neu in Version 0.4.2",
       "expanded": true,
       "visible": true,
       "items": [
         {
           "type": "Label",
-          "caption": "Neu: das Standesamt (Panel „🏛️ Standesamt“) — prüft Etagen-/Raumnamen auf Konsistenz (Zahlenposition, Groß-/Kleinschreibung, Duplikate, kryptische Namen) und bietet für die auffälligen Zeilen eine Korrektur an. Rein beschreibend: die Mehrheit deiner eigenen Namen bestimmt die Konvention, nichts wird vorgegeben. Nichts geschieht automatisch — nur angehakte Zeilen werden umbenannt."
+          "caption": "Fehlerbehebung: Baumeister-Massen-Hilfe („➕ Einfügen“) und Standesamt-Übernehmen-Button warfen einen Fatal Error (\"Argument must be of type string, IPSList given\"). Betraf nur den Formular-Button-Aufruf, nicht STRUKT_GetStructure()."
+        },
+        {
+          "type": "Label",
+          "caption": "Seit 0.4.0: das Standesamt (Panel „🏛️ Standesamt“) — prüft Etagen-/Raumnamen auf Konsistenz (Zahlenposition, Groß-/Kleinschreibung, Duplikate, kryptische Namen) und bietet für die auffälligen Zeilen eine Korrektur an. Rein beschreibend: die Mehrheit deiner eigenen Namen bestimmt die Konvention, nichts wird vorgegeben. Nichts geschieht automatisch — nur angehakte Zeilen werden umbenannt."
         },
         {
           "type": "Label",
