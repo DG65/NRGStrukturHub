@@ -1,11 +1,18 @@
-# StrukturHub
+# Katasteramt (StrukturHub)
 
 ![Symcon](https://img.shields.io/badge/Symcon-PHPModul-blue)
-![Modul Version](https://img.shields.io/badge/Modul_Version-0.2.1-blue)
+![Modul Version](https://img.shields.io/badge/Modul_Version-0.2.2-blue)
 ![Symcon Version](https://img.shields.io/badge/Symcon_Version-9.0%2B-blue)
 ![License](https://img.shields.io/badge/License-PolyForm_Noncommercial_1.0.0-lightgrey)
 ![Check Style](https://github.com/DG65/NRGStrukturHub/actions/workflows/check-style.yml/badge.svg)
 [![PayPal](https://img.shields.io/badge/PayPal-Me-blue?logo=paypal)](https://paypal.me/DietmarGureth)
+
+**Name im DG65 Toolkit: Katasteramt** — die Behörde, die amtlich festhält, wie ein
+Grundstück in Parzellen aufgeteilt ist. Technisch heißt das Modul weiterhin `StrukturHub`
+(Klasse, Präfix `STRUKT_`, Repo `NRGStrukturHub`) — der Vertrag `STRUKT_GetStructure()` wird
+bereits von MeterHub, Dashboard und EMS konsumiert, eine Umbenennung des technischen Präfixes
+würde deren Code brechen. Anzeigename und technischer Name sind bewusst getrennt, genau wie
+bei „NRG-Stack EMS" (Anzeige) vs. Klasse `EMS` (Technik).
 
 IP-Symcon bietet keinen Konfigurationsrahmen für den Objektbaum — jede Installation
 strukturiert Räume/Etagen/Geräte anders, und andere Module können Geräte deshalb nicht
@@ -110,7 +117,8 @@ PolyForm Noncommercial 1.0.0, siehe [LICENSE](LICENSE). Spenden willkommen:
 ---
 
 Teil des **DG65 Toolkit** — eigenständige, domänenfreie Symcon-Bausteine von DG65, ohne
-Energiebezug (Gründungspaar: [GleitenderMittelwert](https://github.com/DG65/NRGGleitenderMittelwert),
-StrukturHub). Kein NRG-Stack-Modul, auch wenn erste Konsumenten des `STRUKT_GetStructure()`-
-Vertrags (MeterHub, Dashboard, EMS) aus NRG-Stack kommen — das ist Reihenfolge, keine
-fachliche Zugehörigkeit.
+Energiebezug. Geschwister-Module (Stand 08.09.2026): **Destille**
+([GleitenderMittelwert](https://github.com/DG65/NRGGleitenderMittelwert)), **Pförtner**
+([Tueroeffner](https://github.com/DG65/Pfoertner)), **Vormund** (MigrationsHub). Kein
+NRG-Stack-Modul, auch wenn erste Konsumenten des `STRUKT_GetStructure()`-Vertrags (MeterHub,
+Dashboard, EMS) aus NRG-Stack kommen — das ist Reihenfolge, keine fachliche Zugehörigkeit.
