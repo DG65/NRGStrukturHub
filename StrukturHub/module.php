@@ -468,6 +468,7 @@ class StrukturHub extends IPSModule
         $this->injectLevelsValues($form);
         $this->injectStatusLine($form);
         $this->injectPreview($form);
+        $this->injectStandesamtValues($form);
 
         return json_encode($form);
     }
@@ -565,12 +566,52 @@ class StrukturHub extends IPSModule
     private function injectPreview(array &$form): void
     {
         $structure = $this->buildStructure();
-        foreach ($form['elements'] as &$el) {
-            if (($el['name'] ?? '') === 'StructurePreview') {
-                $el['values'] = $this->previewRows($structure);
-                break;
+        $el = &$this->findFormElementByName($form['elements'], 'StructurePreview');
+        if ($el !== null) {
+            $el['values'] = $this->previewRows($structure);
+        }
+    }
+
+    private function injectStandesamtValues(array &$form): void
+    {
+        $findings = $this->analyzeNamingConventions();
+
+        $status = &$this->findFormElementByName($form['elements'], 'StandesamtStatus');
+        if ($status !== null) {
+            $status['caption'] = $this->standesamtStatusText($findings);
+        }
+
+        $list = &$this->findFormElementByName($form['elements'], 'NamingFindings');
+        if ($list !== null) {
+            $list['values'] = $this->namingFindingRows($findings);
+        }
+    }
+
+    // Sucht ein Formularelement anhand seines 'name' rekursiv, auch wenn es
+    // in einem ExpansionPanel/RowLayout verschachtelt ist. Live-Fund
+    // 09.09.2026: die bisherigen Injektoren (injectLevelsValues/
+    // injectStatusLine) durchsuchen nur die oberste Ebene — funktioniert nur
+    // zufällig, weil deren Felder (noch) nicht in einem Panel liegen.
+    // 'StructurePreview' dagegen liegt im Panel "🔍 Eingelesene Struktur" und
+    // wurde deshalb beim ERSTEN Formular-Öffnen nie befüllt (nur nachträglich
+    // über UpdateFormField() bei einem Button-Klick, der die Verschachtelung
+    // ignoriert). Gibt eine Referenz zurück, damit der Aufrufer das Element
+    // direkt verändern kann; null, wenn nichts gefunden wurde.
+    private function &findFormElementByName(array &$elements, string $name): ?array
+    {
+        foreach ($elements as &$el) {
+            if (($el['name'] ?? '') === $name) {
+                return $el;
+            }
+            if (isset($el['items']) && is_array($el['items'])) {
+                $found = &$this->findFormElementByName($el['items'], $name);
+                if ($found !== null) {
+                    return $found;
+                }
             }
         }
+        $notFound = null;
+        return $notFound;
     }
 
     private function statusLineText(array $structure): string
@@ -875,6 +916,269 @@ class StrukturHub extends IPSModule
             }
         }
         return null;
+    }
+
+    // -----------------------------------------------------------------
+    // v0.4 Standesamt — Namenskonventions-Berater. Rein DESKRIPTIV: die
+    // MEHRHEIT der bestehenden Namen bestimmt "die Konvention", nichts wird
+    // fest codiert vorgegeben (SUITE.md-Grundregel "keine eigene Anlage als
+    // Norm" — jede Installation hat andere Vorlieben). Arbeitet direkt auf
+    // buildStructure(), keine eigene Konfiguration nötig. Umbenennen ist
+    // eine echte Schreiboperation (IPS_SetName()), deshalb nur für vom
+    // Nutzer angehakte Zeilen mit Korrekturvorschlag, nie automatisch.
+    // -----------------------------------------------------------------
+
+    public function RunNamingCheck(): string
+    {
+        $findings = $this->analyzeNamingConventions();
+        $status   = $this->standesamtStatusText($findings);
+        $this->UpdateFormField('StandesamtStatus', 'caption', $status);
+        $this->UpdateFormField('NamingFindings', 'values', json_encode($this->namingFindingRows($findings), JSON_UNESCAPED_UNICODE));
+        return $status;
+    }
+
+    public function ApplyNamingFixes(string $findings): string
+    {
+        $rows = json_decode($findings, true);
+        if (!is_array($rows)) {
+            return '⛔ Keine gültigen Daten übergeben.';
+        }
+
+        $applied = 0;
+        foreach ($rows as $row) {
+            if (empty($row['Anwenden']) || empty($row['Vorschlag']) || empty($row['ObjectID'])) {
+                continue;
+            }
+            $objectID = (int) $row['ObjectID'];
+            if (!IPS_ObjectExists($objectID)) {
+                continue;
+            }
+            IPS_SetName($objectID, $row['Vorschlag']);
+            $applied++;
+        }
+
+        // Nach Änderungen frisch neu analysieren — behobene Funde
+        // verschwinden, sonst zeigt die Liste den jetzt falschen Altstand.
+        $fresh = $this->analyzeNamingConventions();
+        $this->UpdateFormField('StandesamtStatus', 'caption', $this->standesamtStatusText($fresh));
+        $this->UpdateFormField('NamingFindings', 'values', json_encode($this->namingFindingRows($fresh), JSON_UNESCAPED_UNICODE));
+
+        if ($applied === 0) {
+            return 'ℹ️ Keine Zeile ausgewählt (oder keine hatte einen Korrekturvorschlag).';
+        }
+        return "✅ $applied Umbenennung(en) übernommen.";
+    }
+
+    private function analyzeNamingConventions(): array
+    {
+        $structure = $this->buildStructure();
+        $entries   = [];
+        foreach (array_merge($structure['levels'], $structure['rooms']) as $item) {
+            $entries[] = [
+                'categoryID' => $item['categoryID'],
+                'label'      => $item['label'],
+                'number'     => $item['number'],
+            ];
+        }
+
+        return array_merge(
+            $this->checkNumberPositionConsistency($entries),
+            $this->checkCapitalizationConsistency($entries),
+            $this->checkDuplicateLabels($entries),
+            $this->checkCrypticLabels($entries)
+        );
+    }
+
+    private function checkNumberPositionConsistency(array $entries): array
+    {
+        $withPos = [];
+        foreach ($entries as $e) {
+            $pos = $this->numberPosition($e['label']);
+            if ($pos !== null) {
+                $withPos[] = $e + ['position' => $pos];
+            }
+        }
+        if (count($withPos) < 2) {
+            return []; // zu wenig Datenbasis für eine Mehrheit
+        }
+
+        $counts = ['vorne' => 0, 'hinten' => 0];
+        foreach ($withPos as $e) {
+            $counts[$e['position']]++;
+        }
+        if ($counts['vorne'] === $counts['hinten']) {
+            return []; // Patt, keine klare Mehrheit — nichts melden
+        }
+        $majority = $counts['vorne'] > $counts['hinten'] ? 'vorne' : 'hinten';
+
+        $findings = [];
+        foreach ($withPos as $e) {
+            if ($e['position'] === $majority) {
+                continue;
+            }
+            $findings[] = [
+                'categoryID' => $e['categoryID'],
+                'label'      => $e['label'],
+                'suggestion' => $this->reformatNumberPosition($e['label'], $e['number'], $e['position'], $majority),
+                'reason'     => "Zahlenposition weicht von der Mehrheit ab (die meisten haben die Zahl $majority).",
+            ];
+        }
+        return $findings;
+    }
+
+    // Liefert 'vorne'/'hinten', wenn das Label eine Zahl am Anfang/Ende trägt,
+    // sonst null (auch bei rein numerischen Labels — da ist "Position" nicht
+    // sinnvoll definierbar, es gibt keinen Textrest).
+    private function numberPosition(string $label): ?string
+    {
+        $label = trim($label);
+        if ($label === '' || preg_match('/^\d+$/', $label)) {
+            return null;
+        }
+        if (preg_match('/\d+$/', $label)) {
+            return 'hinten';
+        }
+        if (preg_match('/^\d+/', $label)) {
+            return 'vorne';
+        }
+        return null;
+    }
+
+    private function reformatNumberPosition(string $label, ?string $number, string $currentPosition, string $targetPosition): ?string
+    {
+        if ($number === null || $currentPosition === $targetPosition) {
+            return null;
+        }
+        $rest = $currentPosition === 'vorne'
+            ? preg_replace('/^' . preg_quote($number, '/') . '/', '', $label, 1)
+            : preg_replace('/' . preg_quote($number, '/') . '$/', '', $label, 1);
+        $rest = trim($rest, " .-_");
+        if ($rest === '') {
+            return null;
+        }
+        return $targetPosition === 'vorne' ? "$number $rest" : "$rest $number";
+    }
+
+    private function checkCapitalizationConsistency(array $entries): array
+    {
+        $withStyle = [];
+        foreach ($entries as $e) {
+            $style = $this->capitalizationStyle($e['label']);
+            if ($style !== null) {
+                $withStyle[] = $e + ['style' => $style];
+            }
+        }
+        if (count($withStyle) < 2) {
+            return [];
+        }
+
+        $counts = ['gross' => 0, 'klein' => 0];
+        foreach ($withStyle as $e) {
+            $counts[$e['style']]++;
+        }
+        if ($counts['gross'] === $counts['klein']) {
+            return [];
+        }
+        $majority = $counts['gross'] > $counts['klein'] ? 'gross' : 'klein';
+
+        $findings = [];
+        foreach ($withStyle as $e) {
+            if ($e['style'] === $majority) {
+                continue;
+            }
+            $firstChar  = mb_substr($e['label'], 0, 1);
+            $rest       = mb_substr($e['label'], 1);
+            $suggestion = ($majority === 'gross' ? mb_strtoupper($firstChar) : mb_strtolower($firstChar)) . $rest;
+            $findings[] = [
+                'categoryID' => $e['categoryID'],
+                'label'      => $e['label'],
+                'suggestion' => $suggestion,
+                'reason'     => "Groß-/Kleinschreibung weicht von der Mehrheit ab (die meisten beginnen $majority geschrieben).",
+            ];
+        }
+        return $findings;
+    }
+
+    // 'gross'/'klein' je nach erstem Buchstaben, null wenn das Label gar
+    // nicht mit einem Buchstaben beginnt (Ziffer/Sonderzeichen) — dort ist
+    // keine Aussage über Groß-/Kleinschreibung möglich.
+    private function capitalizationStyle(string $label): ?string
+    {
+        $first = mb_substr(trim($label), 0, 1);
+        if ($first === '' || mb_strtoupper($first) === mb_strtolower($first)) {
+            return null;
+        }
+        return $first === mb_strtoupper($first) ? 'gross' : 'klein';
+    }
+
+    private function checkDuplicateLabels(array $entries): array
+    {
+        $byLabel = [];
+        foreach ($entries as $e) {
+            $byLabel[$e['label']][] = $e;
+        }
+
+        $findings = [];
+        foreach ($byLabel as $group) {
+            if (count($group) < 2) {
+                continue;
+            }
+            foreach ($group as $e) {
+                $findings[] = [
+                    'categoryID' => $e['categoryID'],
+                    'label'      => $e['label'],
+                    'suggestion' => null,
+                    'reason'     => 'Name kommt mehrfach vor (' . count($group) . 'x) — bitte manuell prüfen, welches umbenannt werden soll.',
+                ];
+            }
+        }
+        return $findings;
+    }
+
+    private function checkCrypticLabels(array $entries): array
+    {
+        $findings = [];
+        foreach ($entries as $e) {
+            $label     = trim($e['label']);
+            $isShort   = mb_strlen($label) <= 2;
+            $isCryptic = (bool) preg_match('/^[A-Za-z]?\d+$/', $label);
+            if (!$isShort && !$isCryptic) {
+                continue;
+            }
+            $findings[] = [
+                'categoryID' => $e['categoryID'],
+                'label'      => $label,
+                'suggestion' => null,
+                'reason'     => 'Sehr kurzer/kryptischer Name — evtl. schwer wiederzuerkennen, keine automatische Empfehlung möglich.',
+            ];
+        }
+        return $findings;
+    }
+
+    private function namingFindingRows(array $findings): array
+    {
+        $rows = [];
+        foreach ($findings as $f) {
+            $rows[] = [
+                'Anwenden'  => false,
+                'ObjectID'  => $f['categoryID'],
+                'Objekt'    => IPS_ObjectExists($f['categoryID']) ? IPS_GetName($f['categoryID']) : $f['label'],
+                'Aktuell'   => $f['label'],
+                'Vorschlag' => $f['suggestion'] ?? '',
+                'Grund'     => $f['reason'],
+            ];
+        }
+        return $rows;
+    }
+
+    private function standesamtStatusText(array $findings): string
+    {
+        if (empty($findings)) {
+            return '✅ Keine Auffälligkeiten gefunden.';
+        }
+        $n       = count($findings);
+        $fixable = count(array_filter($findings, fn($f) => $f['suggestion'] !== null));
+        return "ℹ️ $n Auffälligkeit" . ($n === 1 ? '' : 'en') . " gefunden, davon $fixable mit Korrekturvorschlag.";
     }
 
     // Sammelt die Geräte-Instanzen eines Raums: direkte Instanz-Kinder, Links

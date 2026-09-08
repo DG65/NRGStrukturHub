@@ -82,7 +82,16 @@ nachlesen, nicht Code zwischen Modulen vergleichen.
 ## Roadmap
 
 - **v0.1:** Read-only-Auskunft über bestehende Struktur. Live an Dietmars Anlage verifiziert.
-- **v0.2 (aktuell):** der Baumeister — legt Etagen-/Raum-Kategorien nach Konvention an
+- **v0.4 (aktuell):** das Standesamt — Namenskonventions-Berater (`RunNamingCheck`/
+  `ApplyNamingFixes`/`analyzeNamingConventions` in `module.php`, Panel „🏛️ Standesamt"). Rein
+  DESKRIPTIV (Mehrheit der eigenen Namen = Konvention, siehe "keine eigene Anlage als Norm"),
+  vier Prüfungen (Zahlenposition/Case/Duplikate/Kurzlabel), Umbenennen nur für vom Nutzer
+  angehakte Zeilen. Dabei nebenbei einen echten Bug gefunden+gefixt: `injectPreview()` (und
+  jetzt auch der neue `injectStandesamtValues()`) durchsuchten/durchsuchen das Formular
+  rekursiv (`findFormElementByName()`), weil `StructurePreview` in einem `ExpansionPanel`
+  verschachtelt liegt — die alte, rein flache Suche fand es beim ERSTEN Formularöffnen nie,
+  nur nachträglich per `UpdateFormField()` nach einem Button-Klick.
+- **v0.2:** der Baumeister — legt Etagen-/Raum-Kategorien nach Konvention an
   (`AddLevelRows`/`AddRoomRows`/`PreviewSkeleton`/`BuildSkeleton` in `module.php`, Panel
   „🏗️ Baumeister" im Formular). Profitiert vom in v0.1 etablierten Vertrag (das
   Erzeugte ist per Definition vertragskonform — v0.1 liest die neuen Kategorien ohne Änderung

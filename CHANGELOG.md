@@ -3,6 +3,26 @@
 Alle nennenswerten Änderungen an diesem Modul werden hier dokumentiert.
 Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [0.4.0] - 2026-09-09
+
+### Added
+- Standesamt (Panel „🏛️ Standesamt"): Namenskonventions-Berater. Prüft Etagen-/Raumnamen auf
+  vier Arten von Auffälligkeiten (Zahlenposition-Konsistenz, Groß-/Kleinschreibung-Konsistenz,
+  doppelte Labels, sehr kurze/kryptische Labels) — rein deskriptiv, die Mehrheit der eigenen
+  Namen bestimmt die Konvention, nichts wird hartkodiert vorgegeben. Neue Methoden
+  `STRUKT_RunNamingCheck`/`STRUKT_ApplyNamingFixes`. Umbenennen (`IPS_SetName()`) nur für vom
+  Nutzer angehakte Zeilen mit Korrekturvorschlag, nie automatisch.
+- Aus der DG65-Toolkit-Ideenrecherche als Kandidat "Namenskonventions-/Struktur-Berater"
+  identifiziert, von Dietmar als Katasteramt-Feature (nicht eigenes Modul) entschieden, da es
+  auf demselben Baum arbeitet, den `buildStructure()` bereits vollständig kennt.
+
+### Fixed
+- `injectPreview()` durchsuchte das Formular nur auf oberster Ebene — `StructurePreview` liegt
+  aber in einem `ExpansionPanel` verschachtelt und wurde deshalb beim ERSTEN Öffnen des
+  Formulars nie live befüllt (nur nachträglich per `UpdateFormField()` nach einem Klick auf
+  „Struktur jetzt einlesen"). Neue rekursive Hilfsfunktion `findFormElementByName()` behebt
+  das und wird auch vom neuen Standesamt-Panel genutzt.
+
 ## [0.2.2] - 2026-08-30
 
 ### Removed

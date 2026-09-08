@@ -3,13 +3,17 @@
     {
       "type": "ExpansionPanel",
       "name": "NewsPanel",
-      "caption": "🆕 Neu in Version 0.2.0",
+      "caption": "🆕 Neu in Version 0.4.0",
       "expanded": true,
       "visible": true,
       "items": [
         {
           "type": "Label",
-          "caption": "Neu: der Baumeister (Panel „🏗️ Baumeister“) — legt Etagen-/Raum-Kategorien nach der Verbund-Konvention an, auch in Masse per Präfix+Nummernbereich (privat wie gewerblich). Legt weiterhin keine Geräte-Verknüpfungen an."
+          "caption": "Neu: das Standesamt (Panel „🏛️ Standesamt“) — prüft Etagen-/Raumnamen auf Konsistenz (Zahlenposition, Groß-/Kleinschreibung, Duplikate, kryptische Namen) und bietet für die auffälligen Zeilen eine Korrektur an. Rein beschreibend: die Mehrheit deiner eigenen Namen bestimmt die Konvention, nichts wird vorgegeben. Nichts geschieht automatisch — nur angehakte Zeilen werden umbenannt."
+        },
+        {
+          "type": "Label",
+          "caption": "Seit 0.2.0: der Baumeister (Panel „🏗️ Baumeister“) — legt Etagen-/Raum-Kategorien nach der Verbund-Konvention an, auch in Masse per Präfix+Nummernbereich (privat wie gewerblich)."
         },
         {
           "type": "Label",
@@ -46,6 +50,10 @@
         {
           "type": "Label",
           "caption": "Baumeister (Panel weiter unten): Zeilen in „Etagen“/„Räume“ eintragen (frei benennbar — egal ob Etage/Stockwerk/Geschoss, Raum/Büro/Zimmer), bei Bedarf über Präfix+Nummernbereich viele Zeilen auf einmal einfügen. „Vorschau“ zeigt, was passieren würde, ohne etwas anzulegen. „Jetzt anlegen“ erzeugt die Kategorien wirklich — mehrfaches Anlegen mit denselben Zeilen legt nichts doppelt an. Legt KEINE Geräte-Verknüpfungen an, nur das Kategorie-Gerüst."
+        },
+        {
+          "type": "Label",
+          "caption": "Standesamt (Panel weiter unten): „Struktur prüfen“ zeigt Auffälligkeiten bei Namen (Zahlenposition, Groß-/Kleinschreibung, Duplikate, kryptische Namen) — rein beschreibend anhand deiner eigenen Mehrheit, keine feste Vorgabe. Nur Zeilen mit Häkchen bei „Anwenden“ werden durch „Ausgewählte übernehmen“ tatsächlich umbenannt."
         }
       ]
     },
@@ -227,6 +235,37 @@
           "onClick": "echo STRUKT_BuildSkeleton($id, $GenConfirmed, $GenLevels, $GenRooms);"
         },
         { "type": "Label", "name": "GenStatusLine", "caption": "ℹ️ Noch nichts angelegt." }
+      ]
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "🏛️ Standesamt",
+      "expanded": false,
+      "items": [
+        {
+          "type": "Label",
+          "caption": "Prüft deine Etagen-/Raumnamen auf Konsistenz — rein beschreibend: die MEHRHEIT deiner bestehenden Namen bestimmt, was „die Konvention“ gerade ist, keine feste Vorgabe. Meldet z. B. eine uneinheitliche Zahlenposition oder Groß-/Kleinschreibung, doppelte oder sehr kurze/kryptische Namen. Häkchen setzen und „Ausgewählte übernehmen“ klicken benennt nur die ausgewählten Zeilen tatsächlich um — nichts geschieht automatisch."
+        },
+        { "type": "Button", "caption": "🔍 Struktur prüfen", "onClick": "echo STRUKT_RunNamingCheck($id);" },
+        { "type": "Label", "name": "StandesamtStatus", "caption": "ℹ️ Noch nicht geprüft." },
+        {
+          "type": "List",
+          "name": "NamingFindings",
+          "caption": "Auffälligkeiten",
+          "rowCount": 8,
+          "add": false,
+          "delete": false,
+          "loadValuesFromConfiguration": false,
+          "columns": [
+            { "caption": "Anwenden", "name": "Anwenden", "width": "90px", "add": false, "edit": { "type": "CheckBox" } },
+            { "caption": "Objekt", "name": "Objekt", "width": "160px", "add": "", "save": true },
+            { "caption": "Aktuell", "name": "Aktuell", "width": "160px", "add": "", "save": true },
+            { "caption": "Vorschlag", "name": "Vorschlag", "width": "160px", "add": "", "save": true },
+            { "caption": "Grund", "name": "Grund", "width": "auto", "add": "", "save": true },
+            { "caption": "Objekt-ID", "name": "ObjectID", "width": "90px", "add": 0, "save": true }
+          ]
+        },
+        { "type": "Button", "caption": "✅ Ausgewählte übernehmen", "onClick": "echo STRUKT_ApplyNamingFixes($id, $NamingFindings);" }
       ]
     },
     {

@@ -1,7 +1,7 @@
 # Katasteramt (StrukturHub)
 
 ![Symcon](https://img.shields.io/badge/Symcon-PHPModul-blue)
-![Modul Version](https://img.shields.io/badge/Modul_Version-0.2.2-blue)
+![Modul Version](https://img.shields.io/badge/Modul_Version-0.4.0-blue)
 ![Symcon Version](https://img.shields.io/badge/Symcon_Version-9.0%2B-blue)
 ![License](https://img.shields.io/badge/License-PolyForm_Noncommercial_1.0.0-lightgrey)
 ![Check Style](https://github.com/DG65/NRGStrukturHub/actions/workflows/check-style.yml/badge.svg)
@@ -21,7 +21,7 @@ maschinenlesbar, damit Partnermodule (Raumzähler-Zuordnung, Dashboard-Gruppieru
 Lastmanagement-Eingruppierung, …) sie automatisch abfragen können, statt jeweils eigene
 Heuristiken zu bauen.
 
-## Zwei Funktionen in fester Reihenfolge
+## Drei Funktionen in fester Reihenfolge
 
 - **v0.1 — Auskunft über Bestehendes, read-only.** Der Nutzer zeigt einmal im Formular, wo
   seine Struktur liegt (Wurzelkategorie der Räume, welche Unterkategorien Etagen sind).
@@ -35,6 +35,12 @@ Heuristiken zu bauen.
   verknüpft man wie gewohnt selbst). Idempotent: mehrfaches Anlegen mit denselben Zeilen
   erzeugt keine Duplikate. Baut auf dem v0.1-Vertrag auf (das Erzeugte liest v0.1 automatisch
   korrekt ein, inklusive der daraus ableitbaren Raumnummer, siehe `number`-Feld unten).
+- **v0.4 (dieses Release) — das Standesamt.** Prüft Etagen-/Raumnamen auf Konsistenz — Panel
+  „🏛️ Standesamt" im Formular. Rein **beschreibend**: die Mehrheit deiner eigenen Namen
+  bestimmt, was „die Konvention" gerade ist, nichts wird fest vorgegeben (keine eigene Anlage
+  als Norm). Prüft Zahlenposition, Groß-/Kleinschreibung, doppelte und sehr kurze/kryptische
+  Namen. Zeigt Korrekturvorschläge, benennt aber **nur** die vom Nutzer angehakten Zeilen
+  tatsächlich um (`IPS_SetName()`) — nichts geschieht automatisch.
 
 ## Vertrag `STRUKT_GetStructure($id): string`
 
