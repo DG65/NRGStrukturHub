@@ -1,21 +1,23 @@
 <?php
 
 // ===========================================================================
-// StrukturHub — macht die BESTEHENDE Objektbaum-Struktur einer IP-Symcon-
-// Installation (Etagen → Räume → Geräte-Instanzen) maschinenlesbar, damit
-// andere NRG-Stack-Module Geräte zuverlässig eingruppieren können, ohne
-// jedes Mal selbst zu raten ("jedesmal anders Chaos", Auftraggeber-Zitat).
+// Katasteramt (PHP-Klasse seit 09.09.2026 "Katasteramt", vormals "StrukturHub"
+// — Präfix STRUKT_ bleibt unverändert, siehe CLAUDE.md) — macht die
+// BESTEHENDE Objektbaum-Struktur einer IP-Symcon-Installation (Etagen →
+// Räume → Geräte-Instanzen) maschinenlesbar, damit andere NRG-Stack-Module
+// Geräte zuverlässig eingruppieren können, ohne jedes Mal selbst zu raten
+// ("jedesmal anders Chaos", Auftraggeber-Zitat).
 //
 // STATUS v0.1: reines Auskunfts-Modul (read-only). Legt nichts an, baut
 // nichts um — der Nutzer zeigt einmal im Formular, wo seine Struktur liegt,
-// StrukturHub liefert das als Vertrag (STRUKT_GetStructure). Der Gerüst-
+// Katasteramt liefert das als Vertrag (STRUKT_GetStructure). Der Gerüst-
 // Generator (v0.2, Kategorien+Links anlegen) baut später darauf auf.
 //
-// Kein Modul im Verbund wird vorausgesetzt — StrukturHub hat keine
+// Kein Modul im Verbund wird vorausgesetzt — Katasteramt hat keine
 // Partnermodul-Abhängigkeit und funktioniert komplett eigenständig.
 // ===========================================================================
 
-class StrukturHub extends IPSModule
+class Katasteramt extends IPSModule
 {
     public function Create()
     {
@@ -140,10 +142,10 @@ class StrukturHub extends IPSModule
      *   haben (Hash-Vergleich intern) — Konsumenten können das als billigen
      *   Änderungs-Check pollen, statt das komplette JSON zu diffen. Es gibt
      *   KEINEN Push-Mechanismus (kein Event/keine Nachricht bei Änderung).
-     * - "instanceID" ist die ID dieser StrukturHub-Instanz (Debugging/Logging).
+     * - "instanceID" ist die ID dieser Katasteramt-Instanz (Debugging/Logging).
      * - Ohne konfigurierte Wurzelkategorie liefert dies leere levels/rooms-Arrays
      *   und "structureChangedAt": 0, kein Fehler.
-     * - MEHRERE StrukturHub-Instanzen sind ausdrücklich zulässig (z. B. Haupthaus
+     * - MEHRERE Katasteramt-Instanzen sind ausdrücklich zulässig (z. B. Haupthaus
      *   + Nebengebäude mit getrennter Wurzelkategorie) — KEINE Singleton-Annahme.
      *   Konsumenten iterieren über ALLE Instanzen von
      *   IPS_GetInstanceListByModuleID('{CA700334-0982-F356-0617-6952868137E9}'),
@@ -501,8 +503,8 @@ class StrukturHub extends IPSModule
     {
         $lib    = @IPS_GetLibrary('{5E0A988D-0222-B254-88BE-61112640BBD5}');
         $verTxt = (is_array($lib) && isset($lib['Version']))
-            ? 'ℹ️ StrukturHub Version ' . $lib['Version'] . ' (Build ' . ($lib['Build'] ?? '?') . ')'
-            : 'ℹ️ StrukturHub';
+            ? 'ℹ️ Katasteramt Version ' . $lib['Version'] . ' (Build ' . ($lib['Build'] ?? '?') . ')'
+            : 'ℹ️ Katasteramt';
         foreach ($form['elements'] as &$el) {
             if (($el['type'] ?? '') === 'ExpansionPanel' && str_contains($el['caption'] ?? '', 'Dokumentation')) {
                 array_unshift($el['items'], ['type' => 'Label', 'caption' => $verTxt]);

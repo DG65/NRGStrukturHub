@@ -1,15 +1,24 @@
 # Hinweise für die Arbeit an diesem Repository
 
-## Name: Katasteramt (DG65 Toolkit) — technisch weiterhin StrukturHub
+## Name: Katasteramt (DG65 Toolkit) — seit 09.09.2026 auch technisch
 
 Seit 08.09.2026 heißt dieses Modul im DG65 Toolkit **„Katasteramt"** (Anzeigename,
 `library.json→name` = „DG65 Toolkit Katasteramt", `module.json→aliases` enthält
-„Katasteramt"). **Technisch bleibt ALLES unverändert**: PHP-Klasse `StrukturHub`, Präfix
-`STRUKT_`, Repo-Name `Toolkit-Katasteramt`, GUIDs. Grund: `STRUKT_GetStructure()` wird bereits
-von MeterHub/Dashboard/EMS in deren eigenem Code aufgerufen — eine Präfix-/Klassenumbenennung
-würde das brechen, ohne dass die Konsumenten es merken. Bei jeder künftigen Änderung diese
-Trennung beibehalten (Anzeigename ≠ technischer Name), analog zu „NRG-Stack EMS" (Anzeige)
-vs. Klasse `EMS` (Technik) im restlichen Verbund.
+„StrukturHub" als Legacy-Alias). Seit 09.09.2026 ist „Katasteramt" auch der TECHNISCHE Name:
+PHP-Klasse `Katasteramt` (vormals `StrukturHub`), `module.json→name` entsprechend angepasst.
+Möglich gemacht durch Dietmars komplette Symcon-Neuinstallation (keine laufende Instanz mehr,
+die die Klassenumbenennung hätte brechen können — siehe TOOLKIT.md-Faustregel: technischer
+Name friert erst ein, sobald eine echte Instanz läuft oder ein Fremdmodul per
+`function_exists('STRUKT_...')` darauf zugreift).
+
+**Unverändert bleibt NUR der Funktions-Präfix `STRUKT_`** (und damit Repo-Name
+`Toolkit-Katasteramt`, GUIDs) — bewusst getrennt vom Klassennamen, weil `module.json→prefix`
+ein eigenständiges Feld ist. Grund: `STRUKT_GetStructure()` wird bereits von
+MeterHub/Dashboard/EMS in deren eigenem Code aufgerufen — eine PRÄFIX-Umbenennung würde das
+brechen, eine reine Klassenumbenennung dagegen nicht (IPS lädt die Klasse über
+`module.json→name`, nicht über den Präfix). Bei jeder künftigen Änderung diese Trennung
+beibehalten (Anzeigename ≠ technischer Präfix), analog zu „NRG-Stack EMS" (Anzeige) vs.
+Präfix `EMS_` (Technik) im restlichen Verbund.
 
 **Verbindliches Manifest für DG65 Toolkit:** `/Users/dietmar/Nextcloud/Claude/TOOLKIT.md`
 (analog zu SUITE.md bei NRG-Stack) — Branding-Faustregel, Branch-Strategie, Cross-Modul-
@@ -21,7 +30,7 @@ TOOLKIT.md selbst weiter auf SUITE.md.
 Teil desselben Modul-Verbunds (NRG-Stack, DG65), an mehreren wird teils gleichzeitig in
 getrennten Sitzungen gearbeitet:
 
-- **StrukturHub / Katasteramt** (dieses Repo): Objektbaum-Struktur maschinenlesbar machen —
+- **Katasteramt** (dieses Repo, vormals StrukturHub): Objektbaum-Struktur maschinenlesbar machen —
   https://github.com/DG65/Toolkit-Katasteramt
 - **EMS**: koordinierende Instanz, Verbund-Manifest (lokale SUITE.md, siehe unten) — https://github.com/DG65/NRGEMS
 - **MeterHub**: erster geplanter Konsument (Raumzähler-Assistent: kaskadierte virtuelle
@@ -30,10 +39,10 @@ getrennten Sitzungen gearbeitet:
 
 ## Rolle und Grundregeln
 
-1. **Reine Auskunft, kein Regler.** StrukturHub liest die bestehende Struktur und publiziert
+1. **Reine Auskunft, kein Regler.** Katasteramt liest die bestehende Struktur und publiziert
    sie über `STRUKT_GetStructure`. v0.1 legt nichts an, ändert nichts — v0.2 (der Baumeister)
    ist ein separater, späterer Schritt.
-2. **Eigenständigkeit.** StrukturHub setzt kein anderes Modul voraus und wird selbst von
+2. **Eigenständigkeit.** Katasteramt setzt kein anderes Modul voraus und wird selbst von
    keinem vorausgesetzt — jeder Fremdaufruf (sollte in v0.2+ nötig werden) hinter
    `function_exists()`. Prüfwerkzeug: `.tools/check-standalone.php`.
 3. **Vertrag ist öffentliche API.** Einmal veröffentlichte Feldnamen in
@@ -120,7 +129,7 @@ nachlesen, nicht Code zwischen Modulen vergleichen.
     ein Nummer-Position-Feld (vorne/hinten); `STRUKT_GetStructure()` liefert seit
     `contractVersion` 1.1 ein zusätzliches, heuristisch aus dem Namen abgeleitetes `number`-Feld
     (levels UND rooms, siehe `extractNumber()`) — funktioniert für JEDE Kategorie, nicht nur
-    generator-erzeugte. Geräte-Nummern selbst bleiben außerhalb des Scopes (StrukturHub legt
+    generator-erzeugte. Geräte-Nummern selbst bleiben außerhalb des Scopes (Katasteramt legt
     keine Geräte an); Konsumenten, die Geräte benennen, können `number` dafür nutzen.
 
   **Bewusst nicht in v0.2 enthalten** (siehe Plan-Datei für die Begründung): keine

@@ -33,7 +33,7 @@
       "items": [
         {
           "type": "Label",
-          "caption": "StrukturHub macht die bestehende Objektbaum-Struktur einer Symcon-Installation maschinenlesbar. Unten die Wurzelkategorie deiner Räume auswählen (z. B. eine Kategorie „Räume“ oder „Zuhause“) — Beispiel, keine Vorgabe."
+          "caption": "Katasteramt macht die bestehende Objektbaum-Struktur einer Symcon-Installation maschinenlesbar. Unten die Wurzelkategorie deiner Räume auswählen (z. B. eine Kategorie „Räume“ oder „Zuhause“) — Beispiel, keine Vorgabe."
         },
         {
           "type": "Label",
@@ -273,7 +273,7 @@
       "name": "ForumHint",
       "visible": true,
       "items": [
-        { "type": "Label", "caption": "🧪 StrukturHub ist neu — Rückmeldungen sind im Symcon-Forum willkommen:" },
+        { "type": "Label", "caption": "🧪 Katasteramt ist neu — Rückmeldungen sind im Symcon-Forum willkommen:" },
         { "type": "Label", "link": true, "caption": "https://github.com/DG65/Toolkit-Katasteramt" },
         { "type": "Button", "caption": "Nicht mehr anzeigen", "onClick": "STRUKT_DismissForumHint($id);" }
       ]

@@ -1,4 +1,4 @@
-# Katasteramt (StrukturHub)
+# Katasteramt
 
 ![Symcon](https://img.shields.io/badge/Symcon-PHPModul-blue)
 ![Modul Version](https://img.shields.io/badge/Modul_Version-0.4.0-blue)
@@ -8,15 +8,17 @@
 [![PayPal](https://img.shields.io/badge/PayPal-Me-blue?logo=paypal)](https://paypal.me/DietmarGureth)
 
 **Name im DG65 Toolkit: Katasteramt** — die Behörde, die amtlich festhält, wie ein
-Grundstück in Parzellen aufgeteilt ist. Technisch heißt das Modul weiterhin `StrukturHub`
-(Klasse, Präfix `STRUKT_`, Repo `Toolkit-Katasteramt`) — der Vertrag `STRUKT_GetStructure()` wird
-bereits von MeterHub, Dashboard und EMS konsumiert, eine Umbenennung des technischen Präfixes
-würde deren Code brechen. Anzeigename und technischer Name sind bewusst getrennt, genau wie
-bei „NRG-Stack EMS" (Anzeige) vs. Klasse `EMS` (Technik).
+Grundstück in Parzellen aufgeteilt ist. Seit 09.09.2026 auch technisch der Name (PHP-Klasse
+`Katasteramt`, vormals `StrukturHub`) — möglich gemacht durch eine komplette
+Symcon-Neuinstallation bei Dietmar (keine laufende Instanz mehr, die durch eine Klassen-
+umbenennung hätte brechen können). Der Funktions-**Präfix `STRUKT_` bleibt bewusst
+unverändert**, unabhängig vom Klassennamen (beides sind in `module.json` getrennte Felder) —
+der Vertrag `STRUKT_GetStructure()` wird von MeterHub, Dashboard und EMS konsumiert, eine
+Präfix-Änderung würde deren Code brechen, eine reine Klassenumbenennung dagegen nicht.
 
 IP-Symcon bietet keinen Konfigurationsrahmen für den Objektbaum — jede Installation
 strukturiert Räume/Etagen/Geräte anders, und andere Module können Geräte deshalb nicht
-zuverlässig eingruppieren. **StrukturHub** macht eine bestehende Objektbaum-Struktur
+zuverlässig eingruppieren. **Katasteramt** macht eine bestehende Objektbaum-Struktur
 maschinenlesbar, damit Partnermodule (Raumzähler-Zuordnung, Dashboard-Gruppierung,
 Lastmanagement-Eingruppierung, …) sie automatisch abfragen können, statt jeweils eigene
 Heuristiken zu bauen.
@@ -25,7 +27,7 @@ Heuristiken zu bauen.
 
 - **v0.1 — Auskunft über Bestehendes, read-only.** Der Nutzer zeigt einmal im Formular, wo
   seine Struktur liegt (Wurzelkategorie der Räume, welche Unterkategorien Etagen sind).
-  StrukturHub liefert das als Vertrag. Legt nichts an, baut nichts um — gefahrlos
+  Katasteramt liefert das als Vertrag. Legt nichts an, baut nichts um — gefahrlos
   installierbar.
 - **v0.2 (dieses Release) — der Baumeister.** Legt Etagen-/Raum-Kategorien nach der
   Verbund-Konvention an — Panel „🏗️ Baumeister" im Formular. Alle Begriffe frei
@@ -98,18 +100,18 @@ Rückgabe ist ein **JSON-STRING** (kein PHP-Array) — beim Aufrufer
   letzten Aufruf tatsächlich geändert haben (interner Hash-Vergleich) — Konsumenten können
   diesen einen Wert pollen/vergleichen, statt das komplette JSON zu diffen. Es gibt **keinen**
   Push-Mechanismus (kein Event/keine Nachricht bei Änderung).
-- `instanceID` ist die ID dieser StrukturHub-Instanz (Debugging/Logging).
+- `instanceID` ist die ID dieser Katasteramt-Instanz (Debugging/Logging).
 - Immer hinter `function_exists('STRUKT_GetStructure')` aufrufen — jedes Partnermodul ist
-  optional, ohne StrukturHub installiert bleibt jedes andere Modul unverändert funktionsfähig.
+  optional, ohne Katasteramt installiert bleibt jedes andere Modul unverändert funktionsfähig.
 
 ## Mehrere Instanzen
 
-Mehrere StrukturHub-Instanzen sind ausdrücklich zulässig (z. B. Haupthaus + Nebengebäude mit
+Mehrere Katasteramt-Instanzen sind ausdrücklich zulässig (z. B. Haupthaus + Nebengebäude mit
 getrennter Wurzelkategorie) — **keine Singleton-Annahme**. Konsumenten iterieren über ALLE
 Instanzen von `IPS_GetInstanceListByModuleID('{CA700334-0982-F356-0617-6952868137E9}')`, nicht
 nur die erste gefundene.
 
-## Was StrukturHub NICHT tut (v0.1)
+## Was Katasteramt NICHT tut (v0.1)
 
 Keine automatische Etagen-Erkennung — auf derselben Ebene wie Etagen können auch
 Gewerke-Kategorien liegen (Energie, Heizung, Test, …), das lässt sich nicht zuverlässig

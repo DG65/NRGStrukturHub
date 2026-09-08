@@ -3,6 +3,18 @@
 Alle nennenswerten Änderungen an diesem Modul werden hier dokumentiert.
 Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
+## [0.4.1] - 2026-09-09
+
+### Changed
+- PHP-Klasse von `StrukturHub` auf `Katasteramt` umbenannt (`module.json→name` entsprechend
+  angepasst) — Modulverwaltung zeigte nach der reinen Anzeigenamen-Umstellung (0.4.0) noch
+  den technischen Namen `StrukturHub` in der Instanzzeile an. Sicher, weil Dietmars komplette
+  Symcon-Neuinstallation keine laufende Instanz mehr übrig ließ, die dadurch hätte brechen
+  können (siehe TOOLKIT.md-Faustregel). **Der Funktions-Präfix `STRUKT_` bleibt unverändert**
+  (eigenständiges `module.json`-Feld) — `STRUKT_GetStructure()` funktioniert für
+  MeterHub/Dashboard/EMS ohne jede Codeänderung weiter. `module.json→aliases` enthält
+  `StrukturHub` als Legacy-Alias.
+
 ## [0.4.0] - 2026-09-09
 
 ### Added

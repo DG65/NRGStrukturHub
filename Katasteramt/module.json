@@ -1,12 +1,12 @@
 {
   "id": "{CA700334-0982-F356-0617-6952868137E9}",
   "library": "{5E0A988D-0222-B254-88BE-61112640BBD5}",
-  "name": "StrukturHub",
+  "name": "Katasteramt",
   "type": 3,
   "vendor": "",
   "aliases": [
     "DG65 Toolkit Katasteramt",
-    "Katasteramt",
+    "StrukturHub",
     "Objektbaum-Struktur"
   ],
   "url": "https://github.com/DG65/Toolkit-Katasteramt",
