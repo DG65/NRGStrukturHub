@@ -11,6 +11,11 @@ würde das brechen, ohne dass die Konsumenten es merken. Bei jeder künftigen Ä
 Trennung beibehalten (Anzeigename ≠ technischer Name), analog zu „NRG-Stack EMS" (Anzeige)
 vs. Klasse `EMS` (Technik) im restlichen Verbund.
 
+**Verbindliches Manifest für DG65 Toolkit:** `/Users/dietmar/Nextcloud/Claude/TOOLKIT.md`
+(analog zu SUITE.md bei NRG-Stack) — Branding-Faustregel, Branch-Strategie, Cross-Modul-
+Verträge, Koordinationsrolle, Ideenfindungs-Prozess. Für alles Symcon-Allgemeine verweist
+TOOLKIT.md selbst weiter auf SUITE.md.
+
 ## Verwandte Repositories
 
 Teil desselben Modul-Verbunds (NRG-Stack, DG65), an mehreren wird teils gleichzeitig in
