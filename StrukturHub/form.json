@@ -274,7 +274,7 @@
       "visible": true,
       "items": [
         { "type": "Label", "caption": "🧪 StrukturHub ist neu — Rückmeldungen sind im Symcon-Forum willkommen:" },
-        { "type": "Label", "link": true, "caption": "https://github.com/DG65/NRGStrukturHub" },
+        { "type": "Label", "link": true, "caption": "https://github.com/DG65/Toolkit-Katasteramt" },
         { "type": "Button", "caption": "Nicht mehr anzeigen", "onClick": "STRUKT_DismissForumHint($id);" }
       ]
     }

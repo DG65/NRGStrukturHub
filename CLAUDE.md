@@ -5,7 +5,7 @@
 Seit 08.09.2026 heißt dieses Modul im DG65 Toolkit **„Katasteramt"** (Anzeigename,
 `library.json→name` = „DG65 Toolkit Katasteramt", `module.json→aliases` enthält
 „Katasteramt"). **Technisch bleibt ALLES unverändert**: PHP-Klasse `StrukturHub`, Präfix
-`STRUKT_`, Repo-Name `NRGStrukturHub`, GUIDs. Grund: `STRUKT_GetStructure()` wird bereits
+`STRUKT_`, Repo-Name `Toolkit-Katasteramt`, GUIDs. Grund: `STRUKT_GetStructure()` wird bereits
 von MeterHub/Dashboard/EMS in deren eigenem Code aufgerufen — eine Präfix-/Klassenumbenennung
 würde das brechen, ohne dass die Konsumenten es merken. Bei jeder künftigen Änderung diese
 Trennung beibehalten (Anzeigename ≠ technischer Name), analog zu „NRG-Stack EMS" (Anzeige)
@@ -22,7 +22,7 @@ Teil desselben Modul-Verbunds (NRG-Stack, DG65), an mehreren wird teils gleichze
 getrennten Sitzungen gearbeitet:
 
 - **StrukturHub / Katasteramt** (dieses Repo): Objektbaum-Struktur maschinenlesbar machen —
-  https://github.com/DG65/NRGStrukturHub
+  https://github.com/DG65/Toolkit-Katasteramt
 - **EMS**: koordinierende Instanz, Verbund-Manifest (lokale SUITE.md, siehe unten) — https://github.com/DG65/NRGEMS
 - **MeterHub**: erster geplanter Konsument (Raumzähler-Assistent: kaskadierte virtuelle
   Raumzähler gegen `STRUKT_GetStructure()`)
