@@ -5,6 +5,16 @@ Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ## [0.4.2] - 2026-09-09
 
+### Added
+- Baumeister-Massen-Hilfe: dritte Option bei „Nummer" — **„vorne mit Punkt"** (z. B. "1.
+  Obergeschoss", "100. Obergeschoss") zusätzlich zu den bisherigen "hinten"/"vorne"
+  (Live-Rückmeldung Dietmar: die bisherigen zwei Optionen deckten die übliche deutsche
+  Ordinalschreibweise bei vorangestellten Etagen-Nummern nicht ab, "1 Etage" statt "1. Etage").
+  Bewusst als dritte, eigene Auswahl statt fest an "vorne" gekoppelt — Raumnummern ("101 Büro")
+  und Etagen-Ordinalzahlen ("1. Etage") folgen in der Praxis unterschiedlichen Konventionen,
+  keine davon wird vorausgesetzt. Gilt identisch für Etagen UND Räume (dieselbe interne
+  Formatierungsfunktion).
+
 ### Fixed
 - **Fatal Error beim Baumeister-Button „➕ Einfügen" und beim Standesamt-Button „✅ Ausgewählte
   übernehmen"** (Live-Fund von Dietmar über die echte Konsole, nicht durch `php_eval`-Tests

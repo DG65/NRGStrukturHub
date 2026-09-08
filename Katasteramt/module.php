@@ -274,12 +274,21 @@ class Katasteramt extends IPSModule
         return '✅ ' . ($end - $start + 1) . ' Raum-Zeile(n) eingefügt.';
     }
 
-    // "vorne": "101 Büro" (Nummer zuerst) — "hinten" (Default, bisheriges
-    // Verhalten): "Büro 101". Dietmar-Wunsch 28.08.2026: Gebäude-Konventionen
-    // setzen die Nummer mal vor, mal nach dem Namen.
+    // "vorne": "101 Büro" (Nummer zuerst, ohne Punkt) — "vorne_punkt": "1.
+    // Etage" (Nummer zuerst, MIT Punkt — übliche deutsche Ordinalschreibweise
+    // bei Etagen/Kapiteln, z. B. "1. Obergeschoss") — "hinten" (Default,
+    // bisheriges Verhalten): "Büro 101". Dietmar-Wunsch 28.08.2026:
+    // Gebäude-Konventionen setzen die Nummer mal vor, mal nach dem Namen;
+    // Ergänzung 09.09.2026: vorangestellte Nummern brauchen je nach
+    // Konvention zusätzlich einen Punkt (Etagen) oder eben keinen
+    // (Raumnummern) — deshalb als dritte, eigene Option statt fest verdrahtet.
     private function composeGeneratedLabel(string $prefix, int $n, string $numberPos): string
     {
-        return $numberPos === 'vorne' ? ($n . ' ' . $prefix) : ($prefix . ' ' . $n);
+        return match ($numberPos) {
+            'vorne_punkt' => $n . '. ' . $prefix,
+            'vorne'       => $n . ' ' . $prefix,
+            default       => $prefix . ' ' . $n,
+        };
     }
 
     public function PreviewSkeleton(mixed $levelRows, mixed $roomRows): string

@@ -9,6 +9,10 @@
       "items": [
         {
           "type": "Label",
+          "caption": "Baumeister: neue Option „vorne mit Punkt“ bei „Nummer“ (z. B. „1. Obergeschoss“) zusätzlich zu „hinten“/„vorne“ — gilt für Etagen und Räume gleichermaßen."
+        },
+        {
+          "type": "Label",
           "caption": "Fehlerbehebung: Baumeister-Massen-Hilfe („➕ Einfügen“) und Standesamt-Übernehmen-Button warfen einen Fatal Error (\"Argument must be of type string, IPSList given\"). Betraf nur den Formular-Button-Aufruf, nicht STRUKT_GetStructure()."
         },
         {
@@ -174,7 +178,8 @@
               "value": "hinten",
               "options": [
                 { "caption": "hinten (Etage 1)", "value": "hinten" },
-                { "caption": "vorne (1 Etage)", "value": "vorne" }
+                { "caption": "vorne (1 Etage)", "value": "vorne" },
+                { "caption": "vorne mit Punkt (1. Etage)", "value": "vorne_punkt" }
               ]
             },
             { "type": "Button", "caption": "➕ Einfügen", "onClick": "echo STRUKT_AddLevelRows($id, $GenLevels, $GenLevelPrefix, $GenLevelStart, $GenLevelEnd, $GenLevelNumberPos);" }
@@ -209,7 +214,8 @@
               "value": "hinten",
               "options": [
                 { "caption": "hinten (Büro 101)", "value": "hinten" },
-                { "caption": "vorne (101 Büro)", "value": "vorne" }
+                { "caption": "vorne (101 Büro)", "value": "vorne" },
+                { "caption": "vorne mit Punkt (1. Büro)", "value": "vorne_punkt" }
               ]
             },
             { "type": "ValidationTextBox", "name": "GenRoomLevel", "caption": "für Etage (leer = keine)" },
